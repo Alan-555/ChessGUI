@@ -47,6 +47,7 @@ export default function Menu() {
             height="100%"
             fontSize="2xl"
             borderRadius="none"
+            onClick={()=>navigate("/setup")}
           >
             VS Stockfish
           </Button>

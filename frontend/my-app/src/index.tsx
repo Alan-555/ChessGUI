@@ -11,6 +11,8 @@ import Preferences from "./pages/Prefs";
 import AnimatedRouteWrapper from "./components/AnimationWrapper";
 import React from "react";
 import ReactDOM from "react-dom/client";
+import ChessSetup from "./pages/Setup";
+import BackButton from "./components/BackButton";
 
 function AppRoutes() {
   const location = useLocation();
@@ -25,7 +27,11 @@ function AppRoutes() {
         />
         <Route
           path="/preferences"
-          element={<AnimatedRouteWrapper><Preferences /></AnimatedRouteWrapper>}
+          element={<AnimatedRouteWrapper><BackButton/><Preferences /></AnimatedRouteWrapper>}
+        />
+        <Route
+          path="/setup"
+          element={<AnimatedRouteWrapper><BackButton/><ChessSetup /></AnimatedRouteWrapper>}
         />
       </Routes>
       
