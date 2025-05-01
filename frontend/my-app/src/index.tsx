@@ -13,6 +13,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import ChessSetup from "./pages/Setup";
 import BackButton from "./components/BackButton";
+import Game from "./pages/Game";
 
 function AppRoutes() {
   const location = useLocation();
@@ -32,6 +33,10 @@ function AppRoutes() {
         <Route
           path="/setup"
           element={<AnimatedRouteWrapper><BackButton/><ChessSetup /></AnimatedRouteWrapper>}
+        />
+        <Route
+          path="/play"
+          element={<AnimatedRouteWrapper><BackButton/><Game /></AnimatedRouteWrapper>}
         />
       </Routes>
       
