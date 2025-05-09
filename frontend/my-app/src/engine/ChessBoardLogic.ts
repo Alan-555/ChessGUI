@@ -110,6 +110,19 @@ export class ChessBoard {
         }
     }
 
+    public GetLegalMoves(piece: Piece): { file: number; rank: number }[] {
+        return [
+            { file: piece.file + 1, rank: piece.rank + 1 },
+            { file: piece.file - 1, rank: piece.rank - 1 },
+            { file: piece.file + 1, rank: piece.rank - 1 },
+            { file: piece.file - 1, rank: piece.rank + 1 },
+            { file: piece.file + 2, rank: piece.rank + 2 },
+            { file: piece.file - 2, rank: piece.rank - 2 },
+            { file: piece.file + 2, rank: piece.rank - 2 },
+            { file: piece.file - 2, rank: piece.rank + 2 },
+        ]
+    }
+
 }
 
 

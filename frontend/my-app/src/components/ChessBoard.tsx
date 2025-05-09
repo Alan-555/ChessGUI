@@ -50,7 +50,7 @@ export default function ChessBoardComponent() {
             newContext.piece!.ghosted = true;
             return;
         }
-
+        if(dragContext.piece === null) return;
         dragContext.piece!.ghosted = false;
         let rankI = 0;
         for (let rank of board.current.Board) {
@@ -79,6 +79,23 @@ export default function ChessBoardComponent() {
 
     }
 
+    const IsClickValid = (piece : Piece | null) => {
+        
+        if(piece === null) return true;
+        console.log(piece.color == "black");
+        if(piece.color == "black") return false;
+
+        return true;
+    }
+
+    const endSelectionMove = (rank : number, file : number) => {
+        if(selectContext.square?.piece?.rank === rank && selectContext.square?.piece?.file === file) return;
+        board.current.MovePiece(selectContext.square!.piece!, { file: file, rank: rank });
+        setSelectContext({
+            square: null,
+            isSelected: false,
+        });
+    }
 
     const sizePx = `${globalCfg.render.imgSize}px`;
     const repeat = `repeat(8, ${sizePx})`;
@@ -92,6 +109,13 @@ export default function ChessBoardComponent() {
                     let bg = isDark ? "gray.700" : "gray.200";
                     const isSelected = selectContext.isSelected && selectContext.square === square;
                     bg = isSelected ? "blue.300" : bg;
+                    console.log("AA");
+                    
+                    if(selectContext.square?.piece)
+                        if(board.current.GetLegalMoves(selectContext.square?.piece).some(x=>x.file ===colIndex && x.rank === rowIndex)){
+                            bg = "green.300";
+
+                        }
                     const pieceImg = square != null ? square.piece?.imgSrc : null;
 
                     return (
@@ -105,13 +129,22 @@ export default function ChessBoardComponent() {
                             justifyContent="center"
                             onDrag={e => e.preventDefault()}
                             onDragStart={e => e.preventDefault()}
+                            onClick={e => {
+                                e.preventDefault();
+                                if(dragContext.isDragging) return;
+                                if(selectContext.isSelected)
+                                    endSelectionMove(rowIndex, colIndex);
+
+                            }}
                             ref={square?.squareRef}
                         >
                             {pieceImg && (
                                 <Image
                                     src={pieceImg}
                                     alt={`${square?.piece?.color}${square?.piece?.type}`}
+                                    pointerEvents={IsClickValid(square.piece) ? "all" : "none"}
                                     onMouseDown={e => {
+                                        if(!IsClickValid(square.piece)) return;
                                         e.preventDefault();
                                         setDragContext({
                                             isDragging: true,
@@ -121,6 +154,7 @@ export default function ChessBoardComponent() {
                                         );
                                     }}
                                     onMouseUp={e => {
+                                        if(!IsClickValid(square.piece)) return;
                                         e.preventDefault();
                                         setSelectContext({
                                             isSelected: true,
