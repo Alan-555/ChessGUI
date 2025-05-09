@@ -22,11 +22,6 @@ export type Piece = {
     ghosted?: boolean; //Being dragged
 };
 
-export type DragContext = {
-    piece: Piece | null;
-    isDragging: boolean;
-}
-
 export type Square = {
     piece: Piece | null;
     squareRef: React.RefObject<HTMLDivElement|null>;
@@ -104,16 +99,6 @@ export class ChessBoard {
 
         return board;
 
-    }
-
-    public MovePieceRef(from: Piece, to: React.RefObject<HTMLDivElement|null>) {
-        const fromSquare = this.board[from.rank][from.file];
-        const toSquare = this.board[from.rank][from.file];
-
-        if (fromSquare.piece && toSquare.squareRef.current) {
-            toSquare.squareRef.current.appendChild(fromSquare.piece.pieceRef.current!);
-            fromSquare.piece = null;
-        }
     }
 
     public MovePiece(piece : Piece, to: { file: number; rank: number }) {
