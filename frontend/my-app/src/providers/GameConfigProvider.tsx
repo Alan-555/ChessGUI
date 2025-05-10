@@ -29,3 +29,5 @@ export const GameConfigProvider: React.FC<{
         </GameConfigContext.Provider>
     );
 };
+
+

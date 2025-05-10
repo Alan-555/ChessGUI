@@ -2,7 +2,7 @@ import { Button } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowBackIcon } from '@chakra-ui/icons';
 
-const BackButton = () => {
+function BackButton(){
   const navigate = useNavigate();
 
   return (

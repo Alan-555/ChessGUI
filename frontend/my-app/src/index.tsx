@@ -37,7 +37,7 @@ function AppRoutes() {
           />
           <Route
             path="/play"
-            element={<AnimatedRouteWrapper><BackButton /><Game gameConfig={location.state} /></AnimatedRouteWrapper>}
+            element={<AnimatedRouteWrapper><Game gameConfig={location.state} /></AnimatedRouteWrapper>}
           />
         </Routes>
 

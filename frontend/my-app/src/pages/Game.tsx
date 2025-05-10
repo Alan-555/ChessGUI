@@ -1,3 +1,4 @@
+import BackButton from "../components/BackButton";
 import ChessBoardComponent from "../components/ChessBoard";
 import { GameConfig, GameConfigProvider } from "../providers/GameConfigProvider";
 

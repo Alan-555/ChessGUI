@@ -1,5 +1,6 @@
 import React from "react";
 import { GetPieceSrc } from "../resources";
+import { GameConfig } from "../providers/GameConfigProvider";
 
 export enum PieceType {
     PAWN,
@@ -31,7 +32,9 @@ export type Square = {
 export class ChessBoard {
     private board!: Square[][];
     public get Board() : Square[][]{return this.board;}
-
+    public set GameConfig(cfg : GameConfig){
+        this.GameConfig = cfg;
+    }
  
 
     constructor(fen : string = "SP") {
@@ -108,6 +111,16 @@ export class ChessBoard {
         }
     }
 
+    public RequestMovePiece(piece: Piece, to: { file: number; rank: number }) {
+        if(this.IsMoveLegal(piece, to) === false)
+            return;
+        this.MovePiece(piece, to);
+    }
+
+    public IsMoveLegal(piece: Piece, to: { file: number; rank: number }): boolean {
+        return true; //TODO: implement move validation
+    }
+
     public GetLegalMoves(piece: Piece): { file: number; rank: number }[] {
         return [
             { file: piece.file + 1, rank: piece.rank + 1 },
@@ -119,6 +132,34 @@ export class ChessBoard {
             { file: piece.file + 2, rank: piece.rank - 2 },
             { file: piece.file - 2, rank: piece.rank + 2 },
         ]
+    }
+
+
+    public CreateFen(): string {
+        let fen = "";
+        for (let rank = 0; rank < 8; rank++) {
+            let emptyCount = 0;
+            for (let file = 0; file < 8; file++) {
+                const square = this.board[rank][file];
+                if (square.piece) {
+                    if (emptyCount > 0) {
+                        fen += emptyCount;
+                        emptyCount = 0;
+                    }
+                    const pieceChar = PieceTypeToFenChar(square.piece.type, square.piece.color);
+                    fen += pieceChar;
+                } else {
+                    emptyCount++;
+                }
+            }
+            if (emptyCount > 0) {
+                fen += emptyCount;
+            }
+            if (rank < 7) {
+                fen += "/";
+            }
+        }
+        return fen+" w KQkq - 0 1";
     }
 
 }
@@ -139,4 +180,21 @@ function FenCharToPieceType(char: string): PieceType {
         case "k": return PieceType.KING;
         default: throw new Error(`Invalid piece character in FEN: ${char}`);
     }
+}
+
+function PieceTypeToFenChar(type: PieceType, color: PieceColor): string {
+    switch (type) {
+        case PieceType.PAWN: return color === "white" ? "P" : "p";
+        case PieceType.KNIGHT: return color === "white" ? "N" : "n";
+        case PieceType.BISHOP: return color === "white" ? "B" : "b";
+        case PieceType.ROOK: return color === "white" ? "R" : "r";
+        case PieceType.QUEEN: return color === "white" ? "Q" : "q";
+        case PieceType.KING: return color === "white" ? "K" : "k";
+        default: throw new Error(`Invalid piece type: ${type}`);
+    }
+}
+
+export function IsFenValid(fen: string): boolean {
+    const regex = /^(?:[rnbqkpRNBQKP1-8]{1,8}\/){7}[rnbqkpRNBQKP1-8]{1,8} (w|b) (KQ?k?q?|kq?|q?|K?|Q?|) (-|[a-h][1-8]) (\d+) (\d+)$/;
+    return regex.test(fen);
 }

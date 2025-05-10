@@ -82,7 +82,7 @@ export default function ChessBoardComponent() {
     }
 
     const IsClickValid = (piece : Piece | null) => {
-        
+        if(gameConfig?.GameMode=="BOARD_SETUP") return true;
         if(piece === null) return true;
         if(piece.color !== gameConfig?.onlineThisPlayer) return false;
 
@@ -100,7 +100,8 @@ export default function ChessBoardComponent() {
 
     const sizePx = `${globalCfg.render.imgSize}px`;
     const repeat = `repeat(8, ${sizePx})`;
-
+    console.log("Board redraw...");
+    
     return (
         <Grid templateColumns={repeat} templateRows={repeat} gap={0}>
             <PieceDrag dragContext={dragContext} setDragContext={setDragContext} onTrueDrag={onTrueDrag}></PieceDrag>
@@ -110,7 +111,6 @@ export default function ChessBoardComponent() {
                     let bg = isDark ? "gray.700" : "gray.200";
                     const isSelected = selectContext.isSelected && selectContext.square === square;
                     bg = isSelected ? "blue.300" : bg;
-                    console.log("AA");
                     
                     if(selectContext.square?.piece)
                         if(board.current.GetLegalMoves(selectContext.square?.piece).some(x=>x.file ===colIndex && x.rank === rowIndex)){
