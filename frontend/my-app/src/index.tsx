@@ -33,11 +33,11 @@ function AppRoutes() {
           />
           <Route
             path="/setup"
-            element={<AnimatedRouteWrapper><BackButton /><ChessSetup /></AnimatedRouteWrapper>}
+            element={<AnimatedRouteWrapper><BackButton /><ChessSetup mode={location.state} /></AnimatedRouteWrapper>}
           />
           <Route
             path="/play"
-            element={<AnimatedRouteWrapper><BackButton /><Game /></AnimatedRouteWrapper>}
+            element={<AnimatedRouteWrapper><BackButton /><Game gameConfig={location.state} /></AnimatedRouteWrapper>}
           />
         </Routes>
 

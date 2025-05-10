@@ -1,6 +1,7 @@
 import { Box, Button, Grid, GridItem, Image } from "@chakra-ui/react";
 import SplitButtonExample from "../SplitButton";
 import { useNavigate } from "react-router-dom";
+import { GameMode } from "../providers/GameConfigProvider";
 
 export default function Menu() {
   const navigate = useNavigate();
@@ -47,7 +48,10 @@ export default function Menu() {
             height="100%"
             fontSize="2xl"
             borderRadius="none"
-            onClick={()=>navigate("/setup")}
+            onClick={()=>{
+              let mode : GameMode = "PLAY_LOCAL_AI";
+              navigate("/setup",{state:mode})
+            }}
           >
             VS Stockfish
           </Button>
@@ -72,6 +76,10 @@ export default function Menu() {
             fontSize="2xl"
             borderRadius="none"
             className="button"
+            onClick={()=>{
+              let mode : GameMode = "PLAY_LOCAL_FREE";
+              navigate("/setup",{state:mode})
+            }}
           >
             Free play
           </Button>

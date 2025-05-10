@@ -1,10 +1,10 @@
 import ChessBoardComponent from "../components/ChessBoard";
-import { GameConfigProvider } from "../providers/GameConfigProvider";
+import { GameConfig, GameConfigProvider } from "../providers/GameConfigProvider";
 
-export default function Game() {
+export default function Game({gameConfig}:{gameConfig: GameConfig}) {
   return (
     <div style={{ userSelect:"none", WebkitUserSelect:"none", msUserSelect:"none", display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-      <GameConfigProvider>
+      <GameConfigProvider value={gameConfig}>
         <ChessBoardComponent/>
       </GameConfigProvider>
     </div >

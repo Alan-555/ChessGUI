@@ -29,21 +29,19 @@ export type Square = {
 }
 
 export class ChessBoard {
-    private board: Square[][];
+    private board!: Square[][];
     public get Board() : Square[][]{return this.board;}
 
  
 
     constructor(fen : string = "SP") {
-
-        this.board = this.InitBoard(fen);
-        console.log("EEE");
-        
+        this.InitBoard(fen);
     }
 
-    private InitBoard(fen: string = "SP"): Square[][] {
+    public InitBoard(fen: string = "SP"){
         const board: Square[][] = [];
-
+        console.log("Init neww board with FEN: ", fen);
+        
         // Default to starting position if "SP" is used
         const fenToParse = fen === "SP"
             ? "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
@@ -97,7 +95,7 @@ export class ChessBoard {
             board.push(row);
         }
 
-        return board;
+        this.board = board;
 
     }
 

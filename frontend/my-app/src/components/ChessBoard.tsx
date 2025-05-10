@@ -4,6 +4,7 @@ import { img_b_bishop, img_b_king } from "../resources";
 import PieceDrag from "./PieceDrag";
 import { useGlobalConfig } from "../providers/GlobalConfigProvider";
 import { ChessBoard, Piece, Square } from "../engine/ChessBoardLogic";
+import { useGameConfig } from "../providers/GameConfigProvider";
 
 
 export type DragContext = {
@@ -17,12 +18,13 @@ export type SelectContext = {
     isSelected: boolean;
 }
 
-const board_: ChessBoard = new ChessBoard("SP");
+export const GlobalBoard: ChessBoard = new ChessBoard("SP");
 
 export default function ChessBoardComponent() {
-    const board = useRef<ChessBoard>(board_);
+    const board = useRef<ChessBoard>(GlobalBoard);
     const [version, setVersion] = useState(0);
     const globalCfg = useGlobalConfig();
+    const gameConfig = useGameConfig();
 
 
     const [dragContext, setDragContext_] = useState<DragContext>({
@@ -82,8 +84,7 @@ export default function ChessBoardComponent() {
     const IsClickValid = (piece : Piece | null) => {
         
         if(piece === null) return true;
-        console.log(piece.color == "black");
-        if(piece.color == "black") return false;
+        if(piece.color !== gameConfig?.onlineThisPlayer) return false;
 
         return true;
     }

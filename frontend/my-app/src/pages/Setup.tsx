@@ -14,15 +14,20 @@ import {
 } from '@chakra-ui/react';
 import { img_b_king, img_w_king } from '../resources';
 import { ImageSplit } from '../components/ImageSplit';
+import { useNavigate } from 'react-router-dom';
+import { GameConfig, GameMode } from '../providers/GameConfigProvider';
+import { GlobalBoard } from '../components/ChessBoard';
 
 
 
-const ChessSetup = () => {
+function ChessSetup({mode}:{mode : GameMode}){
     const [side, setSide] = useState<'white' | 'black' | 'random'>('white');
     const [useTimer, setUseTimer] = useState(false);
     const [yourTime, setYourTime] = useState("30");
     const [fen, setFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
     const [difficulty, setDifficulty] = useState('Beginner');
+
+    const navigate = useNavigate();
 
     const yourTimeRef = useRef<HTMLInputElement>(null);
 
@@ -52,7 +57,11 @@ const ChessSetup = () => {
             transform: 'scale(1.05)',
         }
     };
-
+    let config : GameConfig = {
+        GameMode: mode,
+        onlineThisPlayer: (side === "random" ? Math.random() > 0.5 ? "white" : "black" : side),
+        startPosition: fen,
+    }
 
     return (
         <Box p={10} maxW="700px" mx="auto">
@@ -131,7 +140,7 @@ const ChessSetup = () => {
                     </Select>
                 </Box>
 
-                <Button colorScheme="teal" size="lg" fontSize="xl" px={10} py={6}>Start Game</Button>
+                <Button onClick={()=>{navigate("/play",{state:config});GlobalBoard.InitBoard(config.startPosition)}} colorScheme="teal" size="lg" fontSize="xl" px={10} py={6}>Start Game</Button>
             </VStack>
         </Box>
     );
