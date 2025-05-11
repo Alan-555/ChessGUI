@@ -27,6 +27,7 @@ import { GlobalBoard } from '../components/ChessBoard';
 import Game from './Game';
 import { Overlay } from '../components/Overlay';
 import { ChessBoard, IsFenValid } from '../engine/ChessBoardLogic';
+import GameRaw from './GameRaw';
 
 
 
@@ -190,7 +191,7 @@ function ChessSetup({ mode }: { mode: GameMode }) {
                 setIsOpen(false);
 
             }}>
-                <Game gameConfig={setupBoardCfg} />
+                <GameRaw gameConfig={setupBoardCfg} />
             </Overlay>
             }
         </>

@@ -119,7 +119,10 @@ export default function ChessBoardComponent() {
     }, [])
 
 
-    const sizePx = `${globalCfg.render.imgSize}px`;
+    let sizePx = `calc(100vh / 8)`;
+    if(gameConfig?.GameMode === "BOARD_SETUP") {
+        sizePx = `calc(100vh / 10)`;
+    }
     const repeat = `repeat(8, ${sizePx})`;
     console.log("Board redraw...");
     return (

@@ -10,7 +10,7 @@ type GlobalConfig = {
 
 const defaultGlobalConfig: GlobalConfig = {
     render: {
-        imgSize: 100,
+        imgSize: 120,
     }
 };
 
