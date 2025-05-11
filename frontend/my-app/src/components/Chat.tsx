@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-interface ChatMessage {
+export interface ChatMessage {
     name: string;
     message: string;
 }
@@ -13,7 +13,7 @@ interface ChatProps {
 const Chat: React.FC<ChatProps> = ({ messages, onSendMessage }) => {
     const [inputValue, setInputValue] = useState('');
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
-
+    const inputRef = useRef<HTMLInputElement>(null);
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
@@ -23,6 +23,9 @@ const Chat: React.FC<ChatProps> = ({ messages, onSendMessage }) => {
     }, [messages]);
 
     const handleSendMessage = () => {
+        if (inputRef.current) {
+            inputRef.current.focus();
+        }
         if (inputValue.trim()) {
             onSendMessage(inputValue.trim());
             setInputValue('');
@@ -57,7 +60,8 @@ const Chat: React.FC<ChatProps> = ({ messages, onSendMessage }) => {
                     type="text"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={handleKeyPress}
+                    onKeyDown={handleKeyPress}
+                    ref={inputRef}
                     placeholder="Type a message..."
                     style={{ flex: 1, padding: '10px', border: '1px solid #ccc', borderRadius: '4px' }}
                 />
