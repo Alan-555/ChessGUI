@@ -8,6 +8,7 @@ export type GameConfig = {
     GameMode : GameMode;
     startPosition : string;
     onlineThisPlayer : PieceColor;
+    blackOnBottom?: boolean;
 };
 
 

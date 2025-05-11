@@ -81,11 +81,11 @@ export default function Menu() {
             borderRadius="none"
             className="button"
             onClick={()=>{
-              let mode : GameMode = "PLAY_LOCAL_FREE";
+              let mode : GameMode = "PLAY_LOCAL_HUMAN";
               navigate("/setup",{state:mode})
             }}
           >
-            Free play
+            Local Game
           </Button>
         </GridItem>
 

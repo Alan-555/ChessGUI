@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { act, useEffect, useRef, useState } from 'react';
 import {
     Box,
     Button,
@@ -26,18 +26,21 @@ import { GameConfig, GameMode } from '../providers/GameConfigProvider';
 import { GlobalBoard } from '../components/ChessBoard';
 import Game from './Game';
 import { Overlay } from '../components/Overlay';
-import { ChessBoard, IsFenValid } from '../engine/ChessBoardLogic';
+import { ChessBoard, IsFenValid, PieceColor } from '../engine/ChessBoardLogic';
 import GameRaw from './GameRaw';
+import { useGlobalConfig } from '../providers/GlobalConfigProvider';
 
 
 
 function ChessSetup({ mode }: { mode: GameMode }) {
-    const [side, setSide] = useState<'white' | 'black' | 'random'>('white');
+    const [side, setSide_] = useState<'white' | 'black' | 'random'>('white');
+    const [actualSide, setActualSide] = useState<PieceColor>('white');
     const [useTimer, setUseTimer] = useState(false);
     const [yourTime, setYourTime] = useState("30");
     const [fen, setFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
     const [difficulty, setDifficulty] = useState('Beginner');
 
+    const GlobalConf = useGlobalConfig();
     const navigate = useNavigate();
 
     const yourTimeRef = useRef<HTMLInputElement>(null);
@@ -50,7 +53,16 @@ function ChessSetup({ mode }: { mode: GameMode }) {
 
     const [isOpen, setIsOpen] = useState(false);
 
-
+    const setSide = (newSide: 'white' | 'black' | 'random') => {
+        setSide_(newSide);
+        if (newSide === 'white') {
+            setActualSide('white');
+        } else if (newSide === 'black') {
+            setActualSide('black');
+        } else {
+            setActualSide(Math.random() < 0.5 ? 'white' : 'black');
+        }
+    }
 
     const styleSelected = {
         border: '2px solid white',
@@ -73,8 +85,9 @@ function ChessSetup({ mode }: { mode: GameMode }) {
     };
     let config: GameConfig = {
         GameMode: mode,
-        onlineThisPlayer: (side === "random" ? Math.random() > 0.5 ? "white" : "black" : side),
+        onlineThisPlayer: actualSide,
         startPosition: fen,
+        blackOnBottom: GlobalConf.render.preferredPlayerSide === "BottomMe" ? actualSide === 'black' : false 
     }
 
 
@@ -82,7 +95,7 @@ function ChessSetup({ mode }: { mode: GameMode }) {
     let setupBoardCfg: GameConfig = {
         GameMode: "BOARD_SETUP",
         onlineThisPlayer: 'black',
-        startPosition: fen,
+        startPosition: fen
     }
 
     return (
@@ -90,7 +103,11 @@ function ChessSetup({ mode }: { mode: GameMode }) {
 
             <Box p={10} maxW="700px" mx="auto">
                 <VStack spacing={10}>
-                    <Text fontSize="6xl" fontWeight="bold">Setup</Text>
+                    <Text textAlign={"center"} fontSize="4xl" fontWeight="bold">{
+                        mode === "PLAY_LOCAL_AI" ? "Setup Game Against Stockfish" :
+                            mode === "PLAY_LOCAL_HUMAN" ? "Setup Local Game" :
+                                mode === "PLAY_ONLINE" ? "Setup an Online Game" : "SETUP"
+                        }</Text>
 
                     <Box>
                         <Text fontSize="2xl" mb={4}>Pick your side</Text>
@@ -152,9 +169,7 @@ function ChessSetup({ mode }: { mode: GameMode }) {
 
                     <Box w="full">
                         <Text fontSize="xl" mb={2}>Starting FEN</Text>
-                        <Input size="lg" value={fen} onChange={(e) => setFen(e.target.value)} />
-                    </Box>
-                    <Box w="full">
+                        <Input marginRight={"10px"} width={"80%"} size="lg" value={fen} onChange={(e) => setFen(e.target.value)} />
                         <Button
                             onClick={() => {
                                 if(!IsFenValid(fen)){
@@ -168,19 +183,25 @@ function ChessSetup({ mode }: { mode: GameMode }) {
                             size="lg"
                             fontSize="xl"
                             px={10}
-                            py={6}
+                            
+                            width={"10%"}
                         >
-                            Setup Position
+                            ✏️
                         </Button>
                     </Box>
                     <Box w="full">
-                        <Text fontSize="xl" mb={2}>Stockfish difficulty</Text>
-                        <Select size="lg" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
-                            {['Beginner', 'Easy', 'Medium', 'Hard', 'Master'].map(level => (
-                                <option key={level} value={level}>{level}</option>
-                            ))}
-                        </Select>
+                        
                     </Box>
+                    {mode === "PLAY_LOCAL_AI" && (
+                        <Box w="full">
+                            <Text fontSize="xl" mb={2}>Stockfish difficulty</Text>
+                            <Select size="lg" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
+                                {['Beginner', 'Easy', 'Medium', 'Hard', 'Master'].map(level => (
+                                    <option key={level} value={level}>{level}</option>
+                                ))}
+                            </Select>
+                        </Box>
+                    )}
 
                     <Button onClick={() => { navigate("/play", { state: config }); GlobalBoard.InitBoard(config.startPosition) }} colorScheme="teal" size="lg" fontSize="xl" px={10} py={6}>Start Game</Button>
                 </VStack>

@@ -125,12 +125,16 @@ export default function ChessBoardComponent() {
     }
     const repeat = `repeat(8, ${sizePx})`;
     console.log("Board redraw...");
+    const theBoard = gameConfig?.blackOnBottom ? GlobalBoard.Board.slice().reverse() : GlobalBoard.Board;
     return (
         <>
             <Grid templateColumns={repeat} templateRows={repeat} gap={0}>
                 <PieceDrag dragContext={dragContext} setDragContext={setDragContext} onTrueDrag={onTrueDrag}></PieceDrag>
-                {board.current.Board.map((row, rowIndex) =>
+                {theBoard.map((row, rowIndex) =>
                     row.map((square, colIndex) => {
+                        if(gameConfig?.blackOnBottom&&colIndex === 0) {
+                            rowIndex = 7 - rowIndex;
+                        }
                         const isDark = (rowIndex + colIndex) % 2 === 1;
                         let bg = isDark ? "gray.700" : "gray.200";
                         const isSelected = selectContext.isSelected && selectContext.square === square;

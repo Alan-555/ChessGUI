@@ -4,6 +4,7 @@ import React, { createContext, useContext } from "react";
 type GlobalConfig = {
     render: {
         imgSize: number;
+        preferredPlayerSide?: "BottomMe" | "BottomWhite";
     }
 };
 
@@ -11,6 +12,7 @@ type GlobalConfig = {
 const defaultGlobalConfig: GlobalConfig = {
     render: {
         imgSize: 120,
+        preferredPlayerSide: "BottomMe"
     }
 };
 
