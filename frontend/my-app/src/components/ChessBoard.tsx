@@ -1,10 +1,11 @@
 import { Box, Grid, Image } from "@chakra-ui/react";
-import { useRef, useState } from "react";
-import { img_b_bishop, img_b_king } from "../resources";
+import { useEffect, useRef, useState } from "react";
+import { img_b_bishop, img_b_king, img_b_knight, img_b_pawn, img_b_queen, img_b_rook } from "../resources";
 import PieceDrag from "./PieceDrag";
 import { useGlobalConfig } from "../providers/GlobalConfigProvider";
-import { ChessBoard, Piece, Square } from "../engine/ChessBoardLogic";
+import { ChessBoard, Piece, PieceType, Square } from "../engine/ChessBoardLogic";
 import { useGameConfig } from "../providers/GameConfigProvider";
+import SetupPieceSpawner from "./SetupPieceSpawner";
 
 
 export type DragContext = {
@@ -52,7 +53,7 @@ export default function ChessBoardComponent() {
             newContext.piece!.ghosted = true;
             return;
         }
-        if(dragContext.piece === null) return;
+        if (dragContext.piece === null) return;
         dragContext.piece!.ghosted = false;
         let rankI = 0;
         for (let rank of board.current.Board) {
@@ -81,16 +82,16 @@ export default function ChessBoardComponent() {
 
     }
 
-    const IsClickValid = (piece : Piece | null) => {
-        if(gameConfig?.GameMode=="BOARD_SETUP") return true;
-        if(piece === null) return true;
-        if(piece.color !== gameConfig?.onlineThisPlayer) return false;
+    const IsClickValid = (piece: Piece | null) => {
+        if (gameConfig?.GameMode == "BOARD_SETUP") return true;
+        if (piece === null) return true;
+        if (piece.color !== gameConfig?.onlineThisPlayer) return false;
 
         return true;
     }
 
-    const endSelectionMove = (rank : number, file : number) => {
-        if(selectContext.square?.piece?.rank === rank && selectContext.square?.piece?.file === file) return;
+    const endSelectionMove = (rank: number, file: number) => {
+        if (selectContext.square?.piece?.rank === rank && selectContext.square?.piece?.file === file) return;
         board.current.MovePiece(selectContext.square!.piece!, { file: file, rank: rank });
         setSelectContext({
             square: null,
@@ -98,88 +99,122 @@ export default function ChessBoardComponent() {
         });
     }
 
+    useEffect(() => {
+        // define a custom handler function
+        // for the contextmenu event
+        const handleContextMenu = (e: Event) => {
+            // prevent the right-click menu from appearing
+            e.preventDefault()
+        }
+
+        // attach the event listener to 
+        // the document object
+        document.addEventListener("contextmenu", handleContextMenu)
+
+        // clean up the event listener when 
+        // the component unmounts
+        return () => {
+            document.removeEventListener("contextmenu", handleContextMenu)
+        }
+    }, [])
+
+
     const sizePx = `${globalCfg.render.imgSize}px`;
     const repeat = `repeat(8, ${sizePx})`;
     console.log("Board redraw...");
-    
     return (
-        <Grid templateColumns={repeat} templateRows={repeat} gap={0}>
-            <PieceDrag dragContext={dragContext} setDragContext={setDragContext} onTrueDrag={onTrueDrag}></PieceDrag>
-            {board.current.Board.map((row, rowIndex) =>
-                row.map((square, colIndex) => {
-                    const isDark = (rowIndex + colIndex) % 2 === 1;
-                    let bg = isDark ? "gray.700" : "gray.200";
-                    const isSelected = selectContext.isSelected && selectContext.square === square;
-                    bg = isSelected ? "blue.300" : bg;
-                    
-                    if(selectContext.square?.piece)
-                        if(board.current.GetLegalMoves(selectContext.square?.piece).some(x=>x.file ===colIndex && x.rank === rowIndex)){
-                            bg = "green.300";
+        <>
+            <Grid templateColumns={repeat} templateRows={repeat} gap={0}>
+                <PieceDrag dragContext={dragContext} setDragContext={setDragContext} onTrueDrag={onTrueDrag}></PieceDrag>
+                {board.current.Board.map((row, rowIndex) =>
+                    row.map((square, colIndex) => {
+                        const isDark = (rowIndex + colIndex) % 2 === 1;
+                        let bg = isDark ? "gray.700" : "gray.200";
+                        const isSelected = selectContext.isSelected && selectContext.square === square;
+                        bg = isSelected ? "blue.300" : bg;
 
-                        }
-                    const pieceImg = square != null ? square.piece?.imgSrc : null;
+                        if (selectContext.square?.piece)
+                            if (board.current.GetLegalMoves(selectContext.square?.piece).some(x => x.file === colIndex && x.rank === rowIndex)) {
+                                bg = "green.300";
 
-                    return (
-                        <Box
-                            key={`${rowIndex}-${colIndex}`}
-                            bg={bg}
-                            w={sizePx}
-                            h={sizePx}
-                            display="flex"
-                            alignItems="center"
-                            justifyContent="center"
-                            onDrag={e => e.preventDefault()}
-                            onDragStart={e => e.preventDefault()}
-                            onClick={e => {
-                                e.preventDefault();
-                                if(dragContext.isDragging) return;
-                                if(selectContext.isSelected)
-                                    endSelectionMove(rowIndex, colIndex);
+                            }
+                        const pieceImg = square != null ? square.piece?.imgSrc : null;
 
-                            }}
-                            ref={square?.squareRef}
-                        >
-                            {pieceImg && (
-                                <Image
-                                    src={pieceImg}
-                                    alt={`${square?.piece?.color}${square?.piece?.type}`}
-                                    pointerEvents={IsClickValid(square.piece) ? "all" : "none"}
-                                    onMouseDown={e => {
-                                        if(!IsClickValid(square.piece)) return;
-                                        e.preventDefault();
-                                        setDragContext({
-                                            isDragging: true,
-                                            piece: square.piece,
-                                        },
-                                            { x: 0, y: 0 }
-                                        );
-                                    }}
-                                    onMouseUp={e => {
-                                        if(!IsClickValid(square.piece)) return;
-                                        e.preventDefault();
-                                        setSelectContext({
-                                            isSelected: true,
-                                            square: square,
-                                        });
-                                        setDragContext({
-                                            isDragging: false,
-                                            piece: null,
-                                        },
-                                            { x: 0, y: 0 }
-                                        );
+                        return (
+                            <Box
+                                key={`${rowIndex}-${colIndex}`}
+                                bg={bg}
+                                w={sizePx}
+                                h={sizePx}
+                                display={square.dummy ? "none" : "flex"}
+                                alignItems="center"
+                                justifyContent="center"
+                                onDrag={e => e.preventDefault()}
+                                onDragStart={e => e.preventDefault()}
+                                onClick={e => {
+                                    e.preventDefault();
+                                    if (dragContext.isDragging) return;
+                                    if (selectContext.isSelected)
+                                        endSelectionMove(rowIndex, colIndex);
 
-                                    }}
-                                    ref={square?.piece?.pieceRef}
-                                    opacity={square.piece?.ghosted ? 0.5 : 1}
-                                    w="80%"
-                                    h="80%"
-                                />
-                            )}
-                        </Box>
-                    );
-                })
+                                }}
+                                ref={square?.squareRef}
+                            >
+                                {pieceImg && (
+                                    <Image
+                                        src={pieceImg}
+                                        alt={`${square?.piece?.color}${square?.piece?.type}`}
+                                        pointerEvents={IsClickValid(square.piece) ? "all" : "none"}
+                                        onMouseDown={e => {
+                                            if (!IsClickValid(square.piece)) return;
+                                            e.preventDefault();
+
+                                            if (e.button === 2 && gameConfig?.GameMode == "BOARD_SETUP") {
+                                                board.current.MovePiece(square.piece!, { file: 0, rank: 8 });
+                                                setSelectContext({
+                                                    isSelected: false,
+                                                    square: null,
+                                                });
+                                                return;
+
+                                            }
+                                            setDragContext({
+                                                isDragging: true,
+                                                piece: square.piece,
+                                            },
+                                                { x: 0, y: 0 }
+                                            );
+                                        }}
+                                        onMouseUp={e => {
+                                            if (!IsClickValid(square.piece)) return;
+                                            e.preventDefault();
+                                            setSelectContext({
+                                                isSelected: true,
+                                                square: square,
+                                            });
+                                            setDragContext({
+                                                isDragging: false,
+                                                piece: null,
+                                            },
+                                                { x: 0, y: 0 }
+                                            );
+
+                                        }}
+                                        ref={square?.piece?.pieceRef}
+                                        opacity={square.piece?.ghosted ? 0.5 : 1}
+                                        w="80%"
+                                        h="80%"
+                                    />
+                                )}
+                            </Box>
+                        );
+                    })
+                )}
+            </Grid>
+            {gameConfig?.GameMode === "BOARD_SETUP" && (
+                SetupPieceSpawner({ board: board.current, setDragContext: setDragContext })
             )}
-        </Grid>
+        </>
     );
 }
 

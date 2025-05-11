@@ -161,7 +161,7 @@ function ChessSetup({ mode }: { mode: GameMode }) {
                                     return;
                                 }
                                 setIsOpen(true);
-                                GlobalBoard.InitBoard(config.startPosition);
+                                GlobalBoard.InitBoard(config.startPosition,true);
                             }}
                             colorScheme="blue"
                             size="lg"

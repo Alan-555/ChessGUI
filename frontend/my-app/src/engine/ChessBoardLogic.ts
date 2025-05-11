@@ -16,35 +16,36 @@ export type PieceColor = "white" | "black";
 export type Piece = {
     type: PieceType;
     color: PieceColor;
-    pieceRef: React.RefObject<HTMLImageElement|null>;
+    pieceRef: React.RefObject<HTMLImageElement | null>;
     file: number;
     rank: number;
-    imgSrc : string;
+    imgSrc: string;
     ghosted?: boolean; //Being dragged
 };
 
 export type Square = {
     piece: Piece | null;
-    squareRef: React.RefObject<HTMLDivElement|null>;
+    squareRef: React.RefObject<HTMLDivElement | null>;
     selected?: boolean; //Selected by click
+    dummy?: boolean; //Used for editing
 }
 
 export class ChessBoard {
     private board!: Square[][];
-    public get Board() : Square[][]{return this.board;}
-    public set GameConfig(cfg : GameConfig){
+    public get Board(): Square[][] { return this.board; }
+    public set GameConfig(cfg: GameConfig) {
         this.GameConfig = cfg;
     }
- 
 
-    constructor(fen : string = "SP") {
+
+    constructor(fen: string = "SP") {
         this.InitBoard(fen);
     }
 
-    public InitBoard(fen: string = "SP"){
+    public InitBoard(fen: string = "SP", editMode: boolean = false) {
         const board: Square[][] = [];
         console.log("Init neww board with FEN: ", fen);
-        
+
         // Default to starting position if "SP" is used
         const fenToParse = fen === "SP"
             ? "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
@@ -75,7 +76,7 @@ export class ChessBoard {
                         pieceRef: React.createRef<HTMLImageElement>(),
                         file,
                         rank,
-                        imgSrc : GetPieceSrc(color, type),
+                        imgSrc: GetPieceSrc(color, type),
                     };
 
                     row.push({
@@ -97,13 +98,19 @@ export class ChessBoard {
 
             board.push(row);
         }
+        if (editMode)
+            EditModeSetup(board);
 
         this.board = board;
 
     }
 
-    public MovePiece(piece : Piece, to: { file: number; rank: number }) {
+    public MovePiece(piece: Piece, to: { file: number; rank: number }) {
         if (piece) {
+            if (this.board[to.rank][to.file].dummy) {
+                this.board[piece.rank][piece.file].piece = null;
+                return;
+            }
             this.board[to.rank][to.file].piece = piece;
             this.board[piece.rank][piece.file].piece = null;
             piece.file = to.file;
@@ -112,7 +119,7 @@ export class ChessBoard {
     }
 
     public RequestMovePiece(piece: Piece, to: { file: number; rank: number }) {
-        if(this.IsMoveLegal(piece, to) === false)
+        if (this.IsMoveLegal(piece, to) === false)
             return;
         this.MovePiece(piece, to);
     }
@@ -132,6 +139,19 @@ export class ChessBoard {
             { file: piece.file + 2, rank: piece.rank - 2 },
             { file: piece.file - 2, rank: piece.rank + 2 },
         ]
+    }
+
+    public SpawnPiece(type: PieceType, color: PieceColor): Piece {
+        const piece: Piece = {
+            type,
+            color,
+            pieceRef: React.createRef<HTMLImageElement>(),
+            file: 0,
+            rank: 8,
+            imgSrc: GetPieceSrc(color, type),
+        };
+        this.board[8][0].piece = piece;
+        return piece;
     }
 
 
@@ -159,7 +179,7 @@ export class ChessBoard {
                 fen += "/";
             }
         }
-        return fen+" w KQkq - 0 1";
+        return fen + " w KQkq - 0 1";
     }
 
 }
@@ -194,7 +214,18 @@ function PieceTypeToFenChar(type: PieceType, color: PieceColor): string {
     }
 }
 
+function EditModeSetup(board: Square[][]){
+    board.push([
+        {
+            piece: null,
+            squareRef: React.createRef<HTMLDivElement>(),
+            dummy: true,
+        }
+    ]);
+}
+
 export function IsFenValid(fen: string): boolean {
     const regex = /^(?:[rnbqkpRNBQKP1-8]{1,8}\/){7}[rnbqkpRNBQKP1-8]{1,8} (w|b) (KQ?k?q?|kq?|q?|K?|Q?|) (-|[a-h][1-8]) (\d+) (\d+)$/;
     return regex.test(fen);
 }
+

@@ -2,9 +2,13 @@ import { Box, Button, Grid, GridItem, Image } from "@chakra-ui/react";
 import SplitButtonExample from "../SplitButton";
 import { useNavigate } from "react-router-dom";
 import { GameMode } from "../providers/GameConfigProvider";
+import { useState } from "react";
 
 export default function Menu() {
   const navigate = useNavigate();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
     <Box position="relative" width="100vw" height="100vh" overflow="hidden" padding={"10vh 10vw"}>
       {/* Blurred background image */}
@@ -100,6 +104,54 @@ export default function Menu() {
           </Button>
         </GridItem>
       </Grid>
+      <Button
+        position="absolute"
+        bottom="5vh"
+        right="5vw"
+        fontSize="lg"
+        padding="1rem 2rem"
+        borderRadius="md"
+        className="button"
+        onClick={() => {
+          setIsModalOpen(true);
+        }}
+      >
+        About
+      </Button>
+
+      {isModalOpen && (
+        <Box
+          position="fixed"
+          top="0"
+          left="0"
+          width="100vw"
+          height="100vh"
+          backgroundColor="rgba(0, 0, 0, 0.5)"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          zIndex="1000"
+        >
+          <Box
+        backgroundColor="white"
+        padding="2rem"
+        borderRadius="md"
+        boxShadow="lg"
+        maxWidth="400px"
+        textAlign="center"
+          >
+        {/*TODO: about */}
+        <p>ABOUT!</p> 
+        <Button
+          marginTop="1rem"
+          onClick={() => setIsModalOpen(false)}
+          className="button"
+        >
+          Close
+        </Button>
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 }
