@@ -23,7 +23,6 @@ export const ImageSplit: React.FC<ImageSplitProps> = ({
         left="0"
         width="100%"
         height="100%"
-        objectFit="cover"
         style={{
           clipPath: "polygon(0 0, 100% 0, 0 100%)"
         }}
@@ -37,7 +36,6 @@ export const ImageSplit: React.FC<ImageSplitProps> = ({
         left="0"
         width="100%"
         height="100%"
-        objectFit="cover"
         style={{
           clipPath: "polygon(100% 100%, 100% 0, 0 100%)"
         }}

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Image } from "@chakra-ui/react";
-import { useGlobalConfig } from "../providers/GlobalConfigProvider";
+import { GetRenderSize, useGlobalConfig } from "../providers/GlobalConfigProvider";
 import { DragContext } from "./ChessBoard";
 
 const PieceDrag = ({
@@ -53,8 +53,8 @@ const PieceDrag = ({
                 left: -100,
                 top: -100,
                 transform: "translate(-50%, -50%)",
-                width: `${globalCfg.render.imgSize}px`,
-                height: `${globalCfg.render.imgSize}px`,
+                width: `${GetRenderSize()}`,
+                height: `${GetRenderSize()}`,
                 zIndex: 9999,
             }}
             onMouseUp={(e) => {

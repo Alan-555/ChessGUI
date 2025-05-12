@@ -87,7 +87,7 @@ function ChessSetup({ mode }: { mode: GameMode }) {
         GameMode: mode,
         onlineThisPlayer: actualSide,
         startPosition: fen,
-        blackOnBottom: GlobalConf.render.preferredPlayerSide === "BottomMe" ? actualSide === 'black' : false 
+        blackOnBottom: GlobalConf.config.render.preferredPlayerSide === "BottomMe" ? actualSide === 'black' : false 
     }
 
 

@@ -13,7 +13,6 @@ export type GameConfig = {
 
 
 
-
 const GameConfigContext = createContext<GameConfig|undefined>(undefined);
 
 

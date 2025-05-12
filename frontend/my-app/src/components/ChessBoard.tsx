@@ -2,7 +2,7 @@ import { Box, Grid, Image } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { img_b_bishop, img_b_king, img_b_knight, img_b_pawn, img_b_queen, img_b_rook } from "../resources";
 import PieceDrag from "./PieceDrag";
-import { useGlobalConfig } from "../providers/GlobalConfigProvider";
+import { GetRenderSize, useGlobalConfig } from "../providers/GlobalConfigProvider";
 import { ChessBoard, Piece, PieceType, Square } from "../engine/ChessBoardLogic";
 import { useGameConfig } from "../providers/GameConfigProvider";
 import SetupPieceSpawner from "./SetupPieceSpawner";
@@ -46,6 +46,8 @@ export default function ChessBoardComponent() {
         }, 0);
     }
 
+
+
     const setDragContext = (newContext: DragContext, dropPos: { x: number, y: number }) => {
 
         setDragContext_(newContext);
@@ -63,7 +65,8 @@ export default function ChessBoardComponent() {
                     const rect = square.squareRef.current.getBoundingClientRect();
                     const x = dropPos.x - rect.left;
                     const y = dropPos.y - rect.top;
-                    if (x > 0 && x < globalCfg.render.imgSize && y > 0 && y < globalCfg.render.imgSize) {
+                    const size = rect.right - rect.left;
+                    if (x > 0 && x < size && y > 0 && y < size) {
                         if (dragContext.piece?.rank === rankI && dragContext.piece?.file === fileI) {
                             return;
                         }
@@ -116,11 +119,11 @@ export default function ChessBoardComponent() {
         return () => {
             document.removeEventListener("contextmenu", handleContextMenu)
         }
-    }, [])
+    }, []);
 
 
-    let sizePx = `calc(100vh / 8)`;
-    if(gameConfig?.GameMode === "BOARD_SETUP") {
+    let sizePx = GetRenderSize();
+    if (gameConfig?.GameMode === "BOARD_SETUP") {
         sizePx = `calc(100vh / 10)`;
     }
     const repeat = `repeat(8, ${sizePx})`;
@@ -132,7 +135,7 @@ export default function ChessBoardComponent() {
                 <PieceDrag dragContext={dragContext} setDragContext={setDragContext} onTrueDrag={onTrueDrag}></PieceDrag>
                 {theBoard.map((row, rowIndex) =>
                     row.map((square, colIndex) => {
-                        if(gameConfig?.blackOnBottom&&colIndex === 0) {
+                        if (gameConfig?.blackOnBottom && colIndex === 0) {
                             rowIndex = 7 - rowIndex;
                         }
                         const isDark = (rowIndex + colIndex) % 2 === 1;
