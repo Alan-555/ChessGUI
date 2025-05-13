@@ -2,7 +2,7 @@ import { Box, Grid, Image } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { img_b_bishop, img_b_king, img_b_knight, img_b_pawn, img_b_queen, img_b_rook } from "../resources";
 import PieceDrag from "./PieceDrag";
-import { GetRenderSize, useGlobalConfig } from "../providers/GlobalConfigProvider";
+import { BoardThemes, GetRenderSize, useGlobalConfig } from "../providers/GlobalConfigProvider";
 import { ChessBoard, Piece, PieceType, Square } from "../engine/ChessBoardLogic";
 import { useGameConfig } from "../providers/GameConfigProvider";
 import SetupPieceSpawner from "./SetupPieceSpawner";
@@ -26,6 +26,8 @@ export default function ChessBoardComponent() {
     const [version, setVersion] = useState(0);
     const globalCfg = useGlobalConfig();
     const gameConfig = useGameConfig();
+
+    const currentTheme = BoardThemes[globalCfg.config.render.theme];
 
 
     const [dragContext, setDragContext_] = useState<DragContext>({
@@ -139,21 +141,22 @@ export default function ChessBoardComponent() {
                             rowIndex = 7 - rowIndex;
                         }
                         const isDark = (rowIndex + colIndex) % 2 === 1;
-                        let bg = isDark ? "gray.700" : "gray.200";
+                        let style = isDark ? currentTheme.darkSquareStyles : currentTheme.lightSquareStyles;
                         const isSelected = selectContext.isSelected && selectContext.square === square;
-                        bg = isSelected ? "blue.300" : bg;
+                        if(isSelected)
+                            style.background = "blue.300";
 
                         if (selectContext.square?.piece)
                             if (board.current.GetLegalMoves(selectContext.square?.piece).some(x => x.file === colIndex && x.rank === rowIndex)) {
-                                bg = "green.300";
+                                style.background = "green.300";
 
                             }
                         const pieceImg = square != null ? square.piece?.imgSrc : null;
 
                         return (
                             <Box
+                                style={style}
                                 key={`${rowIndex}-${colIndex}`}
-                                bg={bg}
                                 w={sizePx}
                                 h={sizePx}
                                 display={square.dummy ? "none" : "flex"}

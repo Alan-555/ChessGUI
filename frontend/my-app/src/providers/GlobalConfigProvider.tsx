@@ -7,7 +7,7 @@ export type BoardThemesType = {
     [key:string] : {
         name : string,
         darkSquareStyles : React.CSSProperties,
-        lightSquareStyles : React.CSSProperties
+        lightSquareStyles : React.CSSProperties,
     }
 }
 
@@ -15,19 +15,19 @@ export const BoardThemes: BoardThemesType = {
     "DARK_BLUE": {
         name: "Dark Blue",
         darkSquareStyles: {
-            background: "gray.700"
+            background: "rgb(55, 65, 81)" // gray.700 in RGB
         },
         lightSquareStyles: {
-            background: "gray.200"
+            background: "rgb(229, 231, 235)" // gray.200 in RGB
         }
     },
     "COOL": {
         name: "Cool Gradient",
         darkSquareStyles: {
-            background: "linear-gradient(135deg, #1e3a8a, #2563eb)"
+            background: "linear-gradient(135deg, rgb(30, 58, 138), rgb(37, 99, 235))" // #1e3a8a and #2563eb in RGB
         },
         lightSquareStyles: {
-            background: "linear-gradient(135deg, #93c5fd, #bfdbfe)"
+            background: "linear-gradient(135deg, rgb(147, 197, 253), rgb(191, 219, 254))" // #93c5fd and #bfdbfe in RGB
         }
     }
 };
