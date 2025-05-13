@@ -5,15 +5,13 @@ import React, { createContext, useContext, useState } from "react";
 
 export type BoardThemesType = {
     [key:string] : {
-        name : string,
         darkSquareStyles : React.CSSProperties,
         lightSquareStyles : React.CSSProperties,
     }
 }
 
 export const BoardThemes: BoardThemesType = {
-    "DARK_BLUE": {
-        name: "Dark Blue",
+    "Dark Blue": {
         darkSquareStyles: {
             background: "rgb(55, 65, 81)" // gray.700 in RGB
         },
@@ -21,8 +19,7 @@ export const BoardThemes: BoardThemesType = {
             background: "rgb(229, 231, 235)" // gray.200 in RGB
         }
     },
-    "COOL": {
-        name: "Cool Gradient",
+    "Cool Gradient": {
         darkSquareStyles: {
             background: "linear-gradient(135deg, rgb(30, 58, 138), rgb(37, 99, 235))" // #1e3a8a and #2563eb in RGB
         },
@@ -52,7 +49,7 @@ const defaultGlobalConfig: GlobalConfig = {
     render: {
         imgSize: undefined,
         preferredPlayerSide: "BottomMe",
-        theme : "DARK_BLUE"
+        theme : "Dark Blue"
     },
 };
 

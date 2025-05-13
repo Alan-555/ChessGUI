@@ -86,15 +86,14 @@ function ChessSetup({ mode }: { mode: GameMode }) {
     let config: GameConfig = {
         GameMode: mode,
         onlineThisPlayer: actualSide,
-        startPosition: fen,
-        blackOnBottom: GlobalConf.config.render.preferredPlayerSide === "BottomMe" ? actualSide === 'black' : false 
+        startPosition: fen
     }
 
 
 
     let setupBoardCfg: GameConfig = {
         GameMode: "BOARD_SETUP",
-        onlineThisPlayer: 'black',
+        onlineThisPlayer: 'white',
         startPosition: fen
     }
 

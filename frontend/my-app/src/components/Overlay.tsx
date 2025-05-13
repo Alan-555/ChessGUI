@@ -28,7 +28,7 @@ export const Overlay = ({ onClose, hide,children }: { onClose: () => void,hide?:
             mt={4}
             onClick={onClose}
             marginTop="-10%"
-            backgroundColor={"#a1ff9e"}
+            colorScheme="teal" 
             width={"100%"}
           >
             Confirm

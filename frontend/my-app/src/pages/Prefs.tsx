@@ -18,7 +18,7 @@ import {
     IconButton,
   } from "@chakra-ui/react";
   import { ChevronDownIcon } from "@chakra-ui/icons";
-  import { useState } from "react";
+  import { useEffect, useState } from "react";
 import { BoardThemes, Themes, useGlobalConfig } from "../providers/GlobalConfigProvider";
   
   export default function Preferences() {
@@ -29,7 +29,6 @@ import { BoardThemes, Themes, useGlobalConfig } from "../providers/GlobalConfigP
     const [boardTheme, setBoardTheme] = useState(globalCfg.config.render.theme);
     const [soundEnabled, setSoundEnabled] = useState(true);
   
-    const toast = useToast();
     const savePreferences = () => {
       globalCfg.setConfig({
         render:{
@@ -38,13 +37,10 @@ import { BoardThemes, Themes, useGlobalConfig } from "../providers/GlobalConfigP
           theme: boardTheme
         }
       });
-      toast({
-        title: "Preferences saved.",
-        status: "success",
-        duration: 2000,
-        isClosable: true,
-      });
     };
+
+    useEffect(()=>savePreferences(), [orientation,scaling,customScaling,boardTheme]);
+    
   
     return (
       <Box
@@ -113,7 +109,7 @@ import { BoardThemes, Themes, useGlobalConfig } from "../providers/GlobalConfigP
               <MenuList>
                 {Themes.map((theme) => (
                   <MenuItem  key={theme} onClick={() => setBoardTheme(theme)}>
-                    {BoardThemes[theme].name}
+                    {theme}
                   </MenuItem>
                 ))}
               </MenuList>
@@ -130,9 +126,6 @@ import { BoardThemes, Themes, useGlobalConfig } from "../providers/GlobalConfigP
             />
           </FormControl>
   
-          <Button colorScheme="teal" onClick={savePreferences}>
-            Save Preferences
-          </Button>
         </VStack>
       </Box>
     );

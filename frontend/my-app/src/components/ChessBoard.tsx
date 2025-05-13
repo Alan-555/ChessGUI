@@ -123,21 +123,21 @@ export default function ChessBoardComponent() {
         }
     }, []);
 
-
+    const blackOnBottom = globalCfg.config.render.preferredPlayerSide === "BottomMe" ? gameConfig?.onlineThisPlayer === 'black' : false;
     let sizePx = GetRenderSize();
     if (gameConfig?.GameMode === "BOARD_SETUP") {
         sizePx = `calc(100vh / 10)`;
     }
     const repeat = `repeat(8, ${sizePx})`;
     console.log("Board redraw...");
-    const theBoard = gameConfig?.blackOnBottom ? GlobalBoard.Board.slice().reverse() : GlobalBoard.Board;
+    const theBoard = blackOnBottom ? GlobalBoard.Board.slice().reverse() : GlobalBoard.Board;
     return (
         <>
             <Grid templateColumns={repeat} templateRows={repeat} gap={0}>
                 <PieceDrag dragContext={dragContext} setDragContext={setDragContext} onTrueDrag={onTrueDrag}></PieceDrag>
                 {theBoard.map((row, rowIndex) =>
                     row.map((square, colIndex) => {
-                        if (gameConfig?.blackOnBottom && colIndex === 0) {
+                        if (blackOnBottom && colIndex === 0) {
                             rowIndex = 7 - rowIndex;
                         }
                         const isDark = (rowIndex + colIndex) % 2 === 1;
