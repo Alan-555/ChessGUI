@@ -6,10 +6,12 @@ import {
     useBoolean,
 } from "@chakra-ui/react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { GameMode } from "./providers/GameConfigProvider";
 
-export default function SplitButtonExample() {
+export default function SplitButton() {
     const [hovered, setHovered] = useState(false);
-
+    const nav = useNavigate();
     return (
         <Box
             display="flex"
@@ -50,7 +52,12 @@ export default function SplitButtonExample() {
                     height="100%"
                     zIndex={hovered ? 1 : 0}
                 >
-                    <Button className="button" width="50%" height="100%" fontSize="lg">
+                    <Button className="button" width="50%" height="100%" fontSize="lg" onClick={
+                        ()=>{
+                            const mode : GameMode = "PLAY_ONLINE_HOST";
+                            nav("/setup",{state:mode})
+                        }
+                    }>
                         Host table
                     </Button>
                     <Button className="button" width="50%" height="100%" fontSize="lg">

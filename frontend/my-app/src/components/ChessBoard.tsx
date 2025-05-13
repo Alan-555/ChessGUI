@@ -144,11 +144,11 @@ export default function ChessBoardComponent() {
                         let style = isDark ? currentTheme.darkSquareStyles : currentTheme.lightSquareStyles;
                         const isSelected = selectContext.isSelected && selectContext.square === square;
                         if(isSelected)
-                            style.background = "blue.300";
+                            style = {...style,background: "rgb(100, 181, 246)"};
 
                         if (selectContext.square?.piece)
                             if (board.current.GetLegalMoves(selectContext.square?.piece).some(x => x.file === colIndex && x.rank === rowIndex)) {
-                                style.background = "green.300";
+                                style = {...style,background: "green"};
 
                             }
                         const pieceImg = square != null ? square.piece?.imgSrc : null;

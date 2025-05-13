@@ -112,7 +112,7 @@ import { BoardThemes, Themes, useGlobalConfig } from "../providers/GlobalConfigP
               </MenuButton>
               <MenuList>
                 {Themes.map((theme) => (
-                  <MenuItem key={theme} onClick={() => setBoardTheme(theme)}>
+                  <MenuItem  key={theme} onClick={() => setBoardTheme(theme)}>
                     {BoardThemes[theme].name}
                   </MenuItem>
                 ))}

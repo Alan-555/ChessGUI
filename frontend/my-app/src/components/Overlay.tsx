@@ -1,7 +1,11 @@
 import { Box, Button, Portal } from "@chakra-ui/react";
 import { ReactNode, useState } from "react";
 
-export const Overlay = ({ onClose, children }: { onClose: () => void, children: ReactNode }) => {
+export const Overlay = ({ onClose, hide,children }: { onClose: () => void,hide?: boolean, children: ReactNode }) => {
+  
+  if(hide)
+    return null;
+  
   return (
     <Portal>
 

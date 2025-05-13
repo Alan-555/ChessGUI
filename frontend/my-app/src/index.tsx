@@ -15,6 +15,7 @@ import ChessSetup from "./pages/Setup";
 import BackButton from "./components/BackButton";
 import Game from "./pages/Game";
 import { GlobalConfigProvider } from "./providers/GlobalConfigProvider";
+import theme from "./theme";
 
 function AppRoutes() {
   const location = useLocation();
@@ -48,7 +49,7 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <ChakraProvider>
+    <ChakraProvider theme={theme}>
       <GlobalConfigProvider>
         <Router>
           <AppRoutes />

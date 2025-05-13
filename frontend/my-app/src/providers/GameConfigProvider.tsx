@@ -1,7 +1,7 @@
 import React, { createContext, useContext } from "react";
 import { PieceColor } from "../engine/ChessBoardLogic";
 
-export type GameMode = "PLAY_LOCAL_HUMAN" | "PLAY_LOCAL_AI" | "PLAY_ONLINE" | "PLAY_LOCAL_FREE" | "BOARD_SETUP";
+export type GameMode = "PLAY_LOCAL_HUMAN" | "PLAY_LOCAL_AI" | "PLAY_ONLINE_HOST"   | "PLAY_ONLINE_JOIN" | "PLAY_LOCAL_FREE" | "BOARD_SETUP";
 
 
 export type GameConfig = {

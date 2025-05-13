@@ -1,5 +1,5 @@
 import { Box, Button, Grid, GridItem, Image } from "@chakra-ui/react";
-import SplitButtonExample from "../SplitButton";
+import SplitButton from "../SplitButton";
 import { useNavigate } from "react-router-dom";
 import { GameMode } from "../providers/GameConfigProvider";
 import { useState } from "react";
@@ -64,7 +64,7 @@ export default function Menu() {
         <GridItem rowSpan={1} colSpan={1} />
 
         <GridItem rowSpan={1} colSpan={1}>
-          <SplitButtonExample/>
+          <SplitButton/>
         </GridItem>
 
         <GridItem rowSpan={1} colSpan={1} />

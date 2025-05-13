@@ -15,7 +15,6 @@ const PieceDrag = ({
     onTrueDrag: () => void
 }
 ) => {
-    const globalCfg = useGlobalConfig();
     const imageRef = useRef<HTMLImageElement>(null);
 
     useEffect(() => {
@@ -38,7 +37,7 @@ const PieceDrag = ({
             window.removeEventListener("mousemove", handleMouseMove);
         };
     }, [dragContext.isDragging]);
-
+    const renderSize = GetRenderSize();
     if (!dragContext.isDragging || !dragContext.piece) return null;
 
 
@@ -53,8 +52,8 @@ const PieceDrag = ({
                 left: -100,
                 top: -100,
                 transform: "translate(-50%, -50%)",
-                width: `${GetRenderSize()}`,
-                height: `${GetRenderSize()}`,
+                width: `${renderSize}`,
+                height: `${renderSize}`,
                 zIndex: 9999,
             }}
             onMouseUp={(e) => {

@@ -27,8 +27,8 @@ export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
       >
         Preferences
       </button>
-      {showPreferences && (
-        <Overlay onClose={() => setShowPreferences(false)}>
+      {(
+        <Overlay hide={!showPreferences} onClose={() => setShowPreferences(false)}>
           <Preferences/>
         </Overlay>
       )}
