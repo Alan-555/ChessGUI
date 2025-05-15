@@ -6,6 +6,7 @@ import { BoardThemes, GetRenderSize, useGlobalConfig } from "../providers/Global
 import { ChessBoard, Piece, PieceType, Square } from "../engine/ChessBoardLogic";
 import { useGameConfig } from "../providers/GameConfigProvider";
 import SetupPieceSpawner from "./SetupPieceSpawner";
+import { GlobalBoard } from "../pages/Game";
 
 
 export type DragContext = {
@@ -19,16 +20,17 @@ export type SelectContext = {
     isSelected: boolean;
 }
 
-export const GlobalBoard: ChessBoard = new ChessBoard("SP");
+
 
 export default function ChessBoardComponent() {
-    const board = useRef<ChessBoard>(GlobalBoard);
+    //const board = useRef<ChessBoard>(GlobalBoard);
     const [version, setVersion] = useState(0);
     const globalCfg = useGlobalConfig();
     const gameConfig = useGameConfig();
-
+    
     const currentTheme = BoardThemes[globalCfg.config.render.theme];
-
+    
+    const board = {current:GlobalBoard};
 
     const [dragContext, setDragContext_] = useState<DragContext>({
         isDragging: false,
@@ -83,7 +85,7 @@ export default function ChessBoardComponent() {
 
     }
     const setSelectContext = (newContext: SelectContext) => {
-        setSelectContext_(newContext);
+        setSelectContext_(newContext); 
 
     }
 
@@ -130,7 +132,7 @@ export default function ChessBoardComponent() {
     }
     const repeat = `repeat(8, ${sizePx})`;
     console.log("Board redraw...");
-    const theBoard = blackOnBottom ? GlobalBoard.Board.slice().reverse() : GlobalBoard.Board;
+    const theBoard = blackOnBottom ? board.current.Board.slice().reverse() : board.current.Board;
     return (
         <>
             <Grid templateColumns={repeat} templateRows={repeat} gap={0}>

@@ -3,12 +3,15 @@ import SplitButton from "../SplitButton";
 import { useNavigate } from "react-router-dom";
 import { GameMode } from "../providers/GameConfigProvider";
 import { useState } from "react";
+import Preferences from "./Prefs";
+import { Overlay } from "../components/Overlay";
+import { AnimatePresence } from "framer-motion";
 
 export default function Menu() {
   const navigate = useNavigate();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const [prefsOpen, setPrefsOpen] = useState(false);
   return (
     <Box position="relative" width="100vw" height="100vh" overflow="hidden" padding={"10vh 10vw"}>
       {/* Blurred background image */}
@@ -37,11 +40,11 @@ export default function Menu() {
         zIndex="1"
         sx={{
           ".button": {
-            color:"white",
-            backgroundColor : "rgba(79, 79, 79, 0.7)"
+            color: "white",
+            backgroundColor: "rgba(79, 79, 79, 0.7)"
           },
-          ".button:hover":{
-            backgroundColor : "rgba(85, 85, 85, 0.79)"
+          ".button:hover": {
+            backgroundColor: "rgba(85, 85, 85, 0.79)"
           }
         }}
       >
@@ -52,9 +55,9 @@ export default function Menu() {
             height="100%"
             fontSize="2xl"
             borderRadius="none"
-            onClick={()=>{
-              let mode : GameMode = "PLAY_LOCAL_AI";
-              navigate("/setup",{state:mode})
+            onClick={() => {
+              let mode: GameMode = "PLAY_LOCAL_AI";
+              navigate("/setup", { state: mode })
             }}
           >
             VS Stockfish
@@ -64,7 +67,7 @@ export default function Menu() {
         <GridItem rowSpan={1} colSpan={1} />
 
         <GridItem rowSpan={1} colSpan={1}>
-          <SplitButton/>
+          <SplitButton />
         </GridItem>
 
         <GridItem rowSpan={1} colSpan={1} />
@@ -80,9 +83,9 @@ export default function Menu() {
             fontSize="2xl"
             borderRadius="none"
             className="button"
-            onClick={()=>{
-              let mode : GameMode = "PLAY_LOCAL_HUMAN";
-              navigate("/setup",{state:mode})
+            onClick={() => {
+              let mode: GameMode = "PLAY_LOCAL_HUMAN";
+              navigate("/setup", { state: mode })
             }}
           >
             Local Game
@@ -98,7 +101,7 @@ export default function Menu() {
             fontSize="2xl"
             borderRadius="none"
             className="button"
-            onClick={()=>navigate("/preferences")}
+            onClick={() => setPrefsOpen(true)}
           >
             Preferences
           </Button>
@@ -133,25 +136,28 @@ export default function Menu() {
           zIndex="1000"
         >
           <Box
-        backgroundColor="white"
-        padding="2rem"
-        borderRadius="md"
-        boxShadow="lg"
-        maxWidth="400px"
-        textAlign="center"
+            backgroundColor="white"
+            padding="2rem"
+            borderRadius="md"
+            boxShadow="lg"
+            maxWidth="400px"
+            textAlign="center"
           >
-        {/*TODO: about */}
-        <p>ABOUT!</p> 
-        <Button
-          marginTop="1rem"
-          onClick={() => setIsModalOpen(false)}
-          className="button"
-        >
-          Close
-        </Button>
+            {/*TODO: about */}
+            <p>ABOUT!</p>
+            <Button
+              marginTop="1rem"
+              onClick={() => setIsModalOpen(false)}
+              className="button"
+            >
+              Close
+            </Button>
           </Box>
         </Box>
       )}
+      <Overlay key={"prefs"} show={prefsOpen} onClose={() => setPrefsOpen(false)}>
+        <Preferences />
+      </Overlay>
     </Box>
   );
 }

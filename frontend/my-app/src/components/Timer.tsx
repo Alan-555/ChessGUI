@@ -25,10 +25,9 @@ const Timer = ({timeWhite,timeBlack, activeTimer}:{timeWhite : number, timeBlack
     };
 
     return (
-        <div style={{ textAlign: 'center', fontFamily: 'Arial, sans-serif' }}>
-            <div style={{ fontSize: '24px', marginBottom: '-10px' }}>{formatTime(topTime)}</div>
-            <div style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '-10px' }}>Timer</div>
-            <div style={{ fontSize: '24px', marginTop: '-10px' }}>{formatTime(bottomTime)}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', fontFamily: 'Arial, sans-serif' }}>
+            <div style={{ fontSize: '4vh', marginBottom: '10px' }}>{formatTime(topTime)}</div>
+            <div style={{ fontSize: '4vh', marginTop: '10px' }}>{formatTime(bottomTime)}</div>
         </div>
     );
 };
