@@ -15,6 +15,14 @@ export const GlobalBoard: ChessBoard = new ChessBoard("SP");
 export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
 
   const [showPreferences, setShowPreferences] = useState(false);
+
+  const [chat, setChat] = useState<ChatMessage[]>(
+    [
+      { name: "Opponent", message: "Hello!" },
+      { name: "You", message: "Hi there!" },
+    ]
+  );
+
   return (
     <div style={{ userSelect: "none", WebkitUserSelect: "none", msUserSelect: "none", display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
 
