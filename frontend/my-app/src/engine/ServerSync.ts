@@ -1,5 +1,6 @@
+import { GlobalBoard } from "../pages/Game";
 import { GameConfig } from "../providers/GameConfigProvider";
-import { Move, PieceColor, Position } from "./ChessBoardLogic";
+import { ChessBoard, Move, PieceColor, Position } from "./ChessBoardLogic";
 
 export enum MessageType {
     SYNC, //server-> client (sync info)
@@ -21,30 +22,36 @@ export enum MessageType {
 
 export type Message =
     | {
+        clientID : string
         type: MessageType.REG_SEND;
-        data: Register;
+        data: null;
     }
     | {
+        clientID : string
         type: MessageType.CHAT;
         data: {
             message: string
         };
     }
     | {
+        clientID : string
         type: MessageType.INIT_HOST_START;
         data: MessageStateSync;
     }
     | {
+        clientID : string
         type: MessageType.INIT_HOST_VS_AI_START;
         data: MessageStateSync;
     }
     | {
+        clientID : string
         type: MessageType.INIT_CLIENT_START;
         data: {
             gameID: string
         }
     }
     | {
+        clientID : string
         type: MessageType.MOVE,
         data: {
             from: ServerPos,
@@ -52,22 +59,27 @@ export type Message =
         }
     }
     | {
+        clientID : string
         type: MessageType.GAME_RESIGN,
         data?: undefined
     }
     | {
+        clientID : string
         type: MessageType.GAME_OVER
         data: GameOverData
     }
     | {
+        clientID : string
         type: MessageType.SYNC,
         data: MessageStateSync
     }
     | {
+        clientID : string
         type: MessageType.REG_ACKNOWLEDGE,
         data: null
     }
     | {
+        clientID : string
         type: MessageType.SYNC_REQUEST,
         data: null
     }
@@ -91,7 +103,7 @@ export type MessageStateSync = {
     playerToMove: string;
     whiteTime: number;
     blackTime: number;
-    legalMoves?: Move[];
+    legalMoves?: string[];
     youAre: PieceColor
 }
 
@@ -131,6 +143,7 @@ export class ServerSync {
     private static instance: ServerSync;
     private socket: WebSocket | null = null;
     private queue: Queue = new Queue();
+    private clientID : string = "145";
 
 
     private constructor() {
@@ -216,11 +229,12 @@ export class ServerSync {
         );
     }
 
-    private async Send<K extends MessageType>(message: Message, waitFor?: K): Promise<Extract<Message, { type: K }> | undefined> {
+    private async Send<K extends MessageType>(message: Omit<Message,"clientID">, waitFor?: K): Promise<Extract<Message, { type: K }> | undefined> {
+        const message_ = {...message, clientID:this.clientID };
         if (waitFor !== undefined && waitFor !== null) {
             return new Promise(
                 (resolve, reject) => {//TODO: implement reject
-                    this.SendJSON(message);
+                    this.SendJSON(message_);
                     this.Enqueue({
                         waitFor: waitFor,
                         onReceive(data) {
@@ -230,7 +244,7 @@ export class ServerSync {
                 }
             );
         }
-        this.SendJSON(message);
+        this.SendJSON(message_);
     }
 
     private Disconnect(): void {
@@ -240,17 +254,24 @@ export class ServerSync {
         }
     }
 
+    public async GetSync(){
+        return await this.Send({
+            type: MessageType.SYNC_REQUEST,
+            data:null
+        }, MessageType.SYNC);
+    }
+
     private async RegisterConnection() {
         return await this.Send({
             type: MessageType.REG_SEND,
-            data: {
-                playerID: "123" //TODO: player ID
-            }
+            data: null,
         }, MessageType.REG_ACKNOWLEDGE);
     }
 
-    public async InitGameAsHost(initCfg: GameConfig, isAI? : boolean) {
+    public async InitGameAsHost(initCfg: GameConfig, isAI? : boolean, setStatus? :  (m : string)=>Promise<void>) {
+        if(!setStatus) setStatus = async (s)=>{};
         await this.RegisterConnection();
+        await setStatus("Logged in. Sending config...");
         let time = initCfg.time;
         let initGame: MessageStateSync = {
             blackTime: time ? time : 0,
@@ -263,6 +284,11 @@ export class ServerSync {
             type: isAI ? MessageType.INIT_HOST_VS_AI_START : MessageType.INIT_HOST_START,
             data: initGame
         }, MessageType.INIT_GO);
+        await setStatus("Game ready. Running initial sync...");
+        this.Send({
+            type: MessageType.SYNC_REQUEST,
+            data:null
+        }, MessageType.SYNC).then(e=>ChessBoard.MOVES_DIRTY_FIX = e!.data);
     }
 
     public async InitGameAsClient(gameId: string) {

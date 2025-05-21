@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { GameConfig } from '../providers/GameConfigProvider';
 import { ServerSync } from '../engine/ServerSync';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +14,12 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ config }) => {
 
 
     const initStart = useRef(false);
+    const [loadText, setLoadText_] = useState("Establishing connection...");
+
+    let setLoadText = async (m:string)=>{
+        setLoadText_(m);
+        await new Promise(resolve => setTimeout(resolve, 500));
+    }
 
     const nav = useNavigate();
 
@@ -25,8 +31,9 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ config }) => {
             console.log("Board connection init...");
 
             await ServerSync.Instance.Connect("http://localhost:8080");
+            await setLoadText("Connected. Logging in...");
             if (config.GameMode === "PLAY_ONLINE_HOST") {
-                await ServerSync.Instance.InitGameAsHost(config);
+                await ServerSync.Instance.InitGameAsHost(config,undefined, setLoadText);
                 console.log("Server GO signal received. Ready to play!");
                 GlobalBoard.InitBoard(config.startPosition)
                 nav("/play", { state: config });
@@ -70,7 +77,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ config }) => {
                 height: '60px',
                 animation: 'spin 1s linear infinite'
             }} />
-            <h2>Connecting to server...</h2>
+            <h2>{loadText}.</h2>
             <style>
                 {`
                     @keyframes spin {

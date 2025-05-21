@@ -1,7 +1,8 @@
 import React from "react";
 import { GetPieceSrc } from "../resources";
 import { GameConfig } from "../providers/GameConfigProvider";
-import { ServerPos } from "./ServerSync";
+import { MessageStateSync, ServerPos, ServerSync } from "./ServerSync";
+import { number } from "framer-motion";
 
 export enum PieceType {
     PAWN,
@@ -31,42 +32,47 @@ export type Square = {
     dummy?: boolean; //Used for editing
 }
 
-export class Position{
-    file : number;
-    rank : number;
+export class Position {
+    file: number;
+    rank: number;
 
-    private constructor(file : number, rank : number) {
+    private constructor(file: number, rank: number) {
         this.file = file;
         this.rank = rank;
     }
 
-    public static Position(file : number, rank : number) : Position;
-    public static Position(file : string, rank : number) : Position;
+    public static Position(file: number, rank: number): Position;
+    public static Position(file: string, rank: number): Position;
+    public static Position(piece: Piece): Position;
 
-    public static Position(file : number|string, rank : number) :Position{
-        if(typeof(file) == "number"){
-            return new Position(file,rank);
+    public static Position(file: number | string | Piece, rank?: number): Position {
+        if (typeof (file) == "number") {
+            return new Position(file, rank!);
         }
-        else{
-            let file_ =  file.charCodeAt(0) - "A".charCodeAt(0);
-            return new Position(file_, rank);
+        else if (typeof (file) == "object") {
+            let p: Piece = file;
+            return new Position(p.file, p.rank);
+        }
+        else {
+            let file_ = file.charCodeAt(0) - "a".charCodeAt(0);
+            return new Position(file_, 8-rank!);
         }
     }
 
-    public ToServerPos() : ServerPos{
+    public ToServerPos(): ServerPos {
         return {
-            file : String.fromCharCode(this.file + "A".charCodeAt(0)),
-            rank : this.rank
+            file: String.fromCharCode(this.file + "a".charCodeAt(0)),
+            rank: 8-this.rank
         }
     }
 
 
-    
+
 }
 
 export type Move = {
-    from : Position,
-    to : Position
+    from: Position,
+    to: Position
 }
 
 export class ChessBoard {
@@ -166,18 +172,16 @@ export class ChessBoard {
     public IsMoveLegal(piece: Piece, to: { file: number; rank: number }): boolean {
         return true; //TODO: implement move validation
     }
+    public static MOVES_DIRTY_FIX : MessageStateSync;
+    public GetLegalMoves(piece: Piece): Position[] {
+        
+        let moves = ChessBoard.MOVES_DIRTY_FIX.legalMoves!;
+        let piecePos = Position.Position(piece).ToServerPos();
+        return moves
+            .filter(p => p.startsWith(piecePos.file + piecePos.rank))
+            .map<Position>(m => { return Position.Position(m[2], number.parse(m[3])) });
 
-    public GetLegalMoves(piece: Piece): { file: number; rank: number }[] {
-        return [
-            { file: piece.file + 1, rank: piece.rank + 1 },
-            { file: piece.file - 1, rank: piece.rank - 1 },
-            { file: piece.file + 1, rank: piece.rank - 1 },
-            { file: piece.file - 1, rank: piece.rank + 1 },
-            { file: piece.file + 2, rank: piece.rank + 2 },
-            { file: piece.file - 2, rank: piece.rank - 2 },
-            { file: piece.file + 2, rank: piece.rank - 2 },
-            { file: piece.file - 2, rank: piece.rank + 2 },
-        ]
+
     }
 
     public SpawnPiece(type: PieceType, color: PieceColor): Piece {
@@ -253,7 +257,7 @@ function PieceTypeToFenChar(type: PieceType, color: PieceColor): string {
     }
 }
 
-function EditModeSetup(board: Square[][]){
+function EditModeSetup(board: Square[][]) {
     board.push([
         {
             piece: null,

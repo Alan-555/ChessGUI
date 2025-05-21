@@ -1,14 +1,18 @@
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
+import { buffer } from 'stream/consumers';
+import { Move, ParseServerMove } from './protocolTypes';
+
+type Predicate<T> = ((data : T)=>boolean)
 
 class AsyncProcessCommunicator {
     private process: ChildProcessWithoutNullStreams;
-    private queue: { 
-        command: string; 
-        resolve: (output: string) => void; 
-        reject: (error: Error) => void; 
-        handler: (buffer: string) => { isComplete: boolean; output: string } 
+    private queue: {
+        command: string;
+        resolve: (output: string) => void;
+        reject: (error: Error) => void;
+        handle: Predicate<string>
+        buffer: string
     }[] = [];
-    private buffer: string = '';
 
     constructor(command: string, args: string[]) {
         this.process = spawn(command, args);
@@ -18,24 +22,24 @@ class AsyncProcessCommunicator {
     }
 
     private handleOutput(data: Buffer) {
-        this.buffer += data.toString();
         if (this.queue.length > 0) {
-            const { resolve, handler } = this.queue[0];
-            const result = handler(this.buffer);
-            if (result.isComplete) {
-                resolve(result.output);
+            let { resolve, buffer, handle } = this.queue[0];
+            buffer+=data.toString();
+            if(handle(buffer)){
+                resolve(buffer);
                 this.queue.shift();
-                this.buffer = ''; // Clear the buffer for the next command
             }
+
         }
     }
 
-    sendCommand(command: string, handler: null | ((buffer: string) => { isComplete: boolean; output: string })): Promise<string> {
+    sendCommand(command: string, handle?: Predicate<string>): Promise<string> {
         return new Promise((resolve, reject) => {
-            if(handler){
-                this.queue.push({ command, resolve, reject, handler });
-            }
+            if(handle)
+                this.queue.push({ command, resolve, reject, handle: handle, buffer:""});
             this.process.stdin.write(command + '\n');
+            if(!handle)
+                resolve("");
         });
     }
 
@@ -46,33 +50,39 @@ class AsyncProcessCommunicator {
 
 class StockfishInterface {
     private communicator: AsyncProcessCommunicator;
-    private moves: string[] = [];
 
     constructor(stockfishPath: string) {
         this.communicator = new AsyncProcessCommunicator(stockfishPath, []);
     }
 
-    async setPosition(moves: string[]) {
-        this.moves = moves;
-        const positionCommand = `position startpos moves ${moves.join(' ')}`;
-        this.communicator.sendCommand(positionCommand, null);
+    async Init() {
+        let data = await this.communicator.sendCommand("uci",(s)=>s.includes("uciok"));
+    }
+
+    async setPosition(pos : string, moves : string[] = []) {
+        let moves_ = moves.join(' ');
+        const positionCommand = "position fen "+pos + moves ? " moves "+ moves_ : "";
+        await this.communicator.sendCommand(positionCommand);
     }
 
     async getAllLegalMoves(): Promise<string[]> {
-        const output = await this.communicator.sendCommand('go perft 1', (buffer) => {
-            if (buffer.includes('Nodes searched')) {
-                return { isComplete: true, output: buffer };
-            }
-            return { isComplete: false, output: '' };
-        });
-        const moves = output
-            .split('\n')
-            .filter((line) => /^[a-h][1-8][a-h][1-8]/.test(line)) // Match chess move format
-            .map((line) => line.split(':')[0].trim());
-        return moves;
+        let out = await this.communicator.sendCommand("go perft 1",(s)=>s.includes("Nodes searched"));
+        return out.split(/\r?\n/).map((v)=>{
+            if(v.endsWith(": 1"))
+                return v.split(":")[0];
+        }).filter(f=>f!=undefined);        
     }
 
-    async printBoard(): Promise<string> {
+    async getFen(): Promise<string> {
+        const output = await this.communicator.sendCommand('d', (s) => s.includes('Checkers:'));
+        const fenLine = output.split('\n').find(line => line.trim().startsWith('Fen:'));
+        if (fenLine) {
+            return fenLine.replace('Fen:', '').trim();
+        }
+        throw new Error('FEN not found in output');
+    }
+
+    /*async printBoard(): Promise<string> {
         const output = await this.communicator.sendCommand('d', (buffer) => {
             return { isComplete: true, output: buffer };
         });
@@ -98,7 +108,7 @@ class StockfishInterface {
     async doMove(move: string) {
         this.moves.push(move);
         await this.setPosition(this.moves);
-    }
+    }*/
 
     close() {
         this.communicator.close();
