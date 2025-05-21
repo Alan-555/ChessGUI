@@ -5,12 +5,20 @@ import {
     Stack,
     useBoolean,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { GameMode } from "./providers/GameConfigProvider";
+import { GameConfig, GameMode } from "./providers/GameConfigProvider";
+import { Overlay } from "./components/Overlay";
+import { Input } from "@chakra-ui/react";
+import LoadingScreen from "./components/ConnectToServer";
 
 export default function SplitButton() {
     const [hovered, setHovered] = useState(false);
+    const [joinGameScreen, setJoinGameScreen] = useState(false);
+    const [isLoading, startLoad] = useState(false);
+
+    const [gameId, setGameId] = useState("");
+
     const nav = useNavigate();
     return (
         <Box
@@ -53,17 +61,74 @@ export default function SplitButton() {
                     zIndex={hovered ? 1 : 0}
                 >
                     <Button className="button" width="50%" height="100%" fontSize="lg" onClick={
-                        ()=>{
-                            const mode : GameMode = "PLAY_ONLINE_HOST";
-                            nav("/setup",{state:mode})
+                        () => {
+                            const mode: GameMode = "PLAY_ONLINE_HOST";
+                            nav("/setup", { state: mode })
                         }
                     }>
                         Host table
                     </Button>
-                    <Button className="button" width="50%" height="100%" fontSize="lg">
+                    <Button className="button" width="50%" height="100%" fontSize="lg"
+                        onClick={() => { setJoinGameScreen(true); setHovered(false); }}
+                    >
                         Join table
                     </Button>
                 </HStack>
+                <Overlay hideConfirm={true} show={joinGameScreen} onClose={() => setJoinGameScreen(false)}>
+
+                    <Box
+                        backgroundColor="white"
+                        padding="20px"
+                        borderRadius="8px"
+                        height={"20vh"}
+                        boxShadow="lg"
+                        width={{ base: "90%", sm: "400px" }}
+                        textAlign="center"
+                    >
+                        {/* Join Game Form */}
+                        <Stack spacing={4}>
+
+                            <Input
+                                placeholder="Enter game code"
+                                onChange={(e) => { 
+                                    setGameId(e.target.value);
+                                }}
+                                maxLength={12}
+                                autoFocus
+                                value={gameId}
+
+
+                            />
+                            <Button
+                                className="button"
+                                width="100%"
+                                height="5vh"
+                                fontSize="lg"
+                                colorScheme="teal"
+                                onClick={() => {
+                                    setJoinGameScreen(false);
+                                    startLoad(true);
+                                }}
+                            >
+                                Join
+                            </Button>
+                            <Button className="button" width="100%" height="5vh" fontSize="lg" onClick={() => {
+                                setJoinGameScreen(false);
+
+                            }}>
+                                Cancel
+                            </Button>
+                        </Stack>
+                    </Box>
+                </Overlay>
+                <Overlay show={isLoading} hideConfirm={true}>
+                    <LoadingScreen config={{
+                        GameMode: "PLAY_ONLINE_JOIN",
+                        onlineThisPlayer: "black",
+                        startPosition: "",
+                        gameID: gameId
+                        }} />
+                </Overlay>
             </Box>
         </Box>
     );

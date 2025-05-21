@@ -8,6 +8,8 @@ export type GameConfig = {
     GameMode : GameMode;
     startPosition : string;
     onlineThisPlayer : PieceColor;
+    time? : number;
+    gameID? : string;
 };
 
 

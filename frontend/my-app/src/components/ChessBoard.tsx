@@ -27,7 +27,6 @@ export default function ChessBoardComponent() {
     const [version, setVersion] = useState(0);
     const globalCfg = useGlobalConfig();
     const gameConfig = useGameConfig();
-    
     const currentTheme = BoardThemes[globalCfg.config.render.theme];
     
     const board = {current:GlobalBoard};

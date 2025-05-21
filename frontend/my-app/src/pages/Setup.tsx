@@ -29,6 +29,8 @@ import { Overlay } from '../components/Overlay';
 import { ChessBoard, IsFenValid, PieceColor } from '../engine/ChessBoardLogic';
 import GameRaw from './GameRaw';
 import { useGlobalConfig } from '../providers/GlobalConfigProvider';
+import { number } from 'framer-motion';
+import LoadingScreen from '../components/ConnectToServer';
 
 
 
@@ -39,6 +41,8 @@ function ChessSetup({ mode }: { mode: GameMode }) {
     const [yourTime, setYourTime] = useState("30");
     const [fen, setFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
     const [difficulty, setDifficulty] = useState('Beginner');
+
+    const [isLoad, startLoad] = useState(false);
 
     const GlobalConf = useGlobalConfig();
     const navigate = useNavigate();
@@ -86,7 +90,8 @@ function ChessSetup({ mode }: { mode: GameMode }) {
     let config: GameConfig = {
         GameMode: mode,
         onlineThisPlayer: actualSide,
-        startPosition: fen
+        startPosition: fen,
+        time: Number.parseInt(yourTime)
     }
 
 
@@ -201,7 +206,7 @@ function ChessSetup({ mode }: { mode: GameMode }) {
                         </Box>
                     )}
 
-                    <Button onClick={() => { navigate("/play", { state: config }); GlobalBoard.InitBoard(config.startPosition) }} colorScheme="teal" size="lg" fontSize="xl" px={10} py={6}>Start Game</Button>
+                    <Button onClick={() => { startLoad(true) }} colorScheme="teal" size="lg" fontSize="xl" px={10} py={6}>Start Game</Button>
                 </VStack>
             </Box>
             <Overlay show={isOpen} onClose={() => {
@@ -211,6 +216,9 @@ function ChessSetup({ mode }: { mode: GameMode }) {
 
             }}>
                 <GameRaw gameConfig={setupBoardCfg} />
+            </Overlay>
+            <Overlay show={isLoad} hideConfirm={true}>
+                <LoadingScreen config={config}/>
             </Overlay>
 
         </>

@@ -3,7 +3,7 @@ import { ReactNode, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { chakra } from "@chakra-ui/react";
 const MotionBox = chakra(motion.div);
-export const Overlay = ({ onClose, show, children, styles }: { onClose: () => void, show: boolean, children: ReactNode, styles? : React.CSSProperties}) => {
+export const Overlay = ({ onClose, show, children, styles, hideConfirm }: { onClose?: () => void, show: boolean, children: ReactNode, styles?: React.CSSProperties, hideConfirm?: boolean }) => {
 
   return (
     <AnimatePresence>
@@ -36,15 +36,18 @@ export const Overlay = ({ onClose, show, children, styles }: { onClose: () => vo
               style={styles}
             >
               {children}
-              <Button
-              mt={4}
-              onClick={onClose}
-              marginTop="-10%"
-              colorScheme="teal"
-              width={"100%"}
-              >
-              Confirm
-              </Button>
+              {!hideConfirm && (
+
+                <Button
+                  mt={4}
+                  onClick={onClose}
+                  marginTop="-10%"
+                  colorScheme="teal"
+                  width={"100%"}
+                >
+                  Confirm
+                </Button>
+              )}
             </MotionBox>
           </MotionBox>
         </Portal>

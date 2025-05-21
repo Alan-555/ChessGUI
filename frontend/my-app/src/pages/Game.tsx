@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import BackButton from "../components/BackButton";
-import Chat, { ChatMessage } from "../components/Chat";
+import Chat from "../components/Chat";
 import ChessBoardComponent from "../components/ChessBoard";
 import { GameConfig, GameConfigProvider } from "../providers/GameConfigProvider";
 import Timer from "../components/Timer";
@@ -8,20 +8,55 @@ import MoveHistory from "../components/MoveHistory";
 import Preferences from "./Prefs";
 import { Overlay } from "../components/Overlay";
 import GameRightPanel from "../components/GameRightPanel";
-import { ChessBoard } from "../engine/ChessBoardLogic";
+import { ChessBoard, PieceColor } from "../engine/ChessBoardLogic";
+import { GameOverData, MessageStateSync, ServerSync } from "../engine/ServerSync";
 
 export const GlobalBoard: ChessBoard = new ChessBoard("SP");
 
 export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
-
+  const [boardFen, setBoardFen] = useState<string>(gameConfig.startPosition);
+  const [gameTime, setGameTime] = useState<{ whiteTime: number, blackTime: number } | null>(gameConfig.time === undefined ? null : {
+    blackTime: gameConfig.time,
+    whiteTime: gameConfig.time
+  });
   const [showPreferences, setShowPreferences] = useState(false);
-
   const [chat, setChat] = useState<ChatMessage[]>(
     [
-      { name: "Opponent", message: "Hello!" },
-      { name: "You", message: "Hi there!" },
     ]
   );
+  const SendChatMessage = (message: string) => {
+    const newMessage: ChatMessage = {
+      name: "You",
+      message: message,
+    };
+    setChat((prevMessages) => [...prevMessages, newMessage]);
+    ServerSync.Instance.SendChatMessage(message);
+  }
+
+  const once = useRef(false);
+
+  useEffect(() => {
+    if (once.current)
+      return;
+    once.current = true;
+
+    ServerSync.Instance.on<string>("onChat", (m) => {
+      setChat((prevMessages) => [...prevMessages, { name: "Opponent", message: m }]);
+    });
+    ServerSync.Instance.on<MessageStateSync>("onSync", (m) => {
+      if (gameTime)
+        setGameTime({
+          blackTime: m.blackTime,
+          whiteTime: m.whiteTime
+        });
+      GlobalBoard.InitBoard(m.boardFen);
+      ServerSync.Instance.on<GameOverData>("onGameOver",(e)=>{
+        //TODO: game over screen
+      })
+
+    });
+
+  });
 
   return (
     <div style={{ userSelect: "none", WebkitUserSelect: "none", msUserSelect: "none", display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -34,13 +69,19 @@ export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
       </button>
       {(
         <Overlay show={showPreferences} onClose={() => setShowPreferences(false)}>
-          <Preferences/>
+          <Preferences />
         </Overlay>
       )}
       <GameConfigProvider value={gameConfig}>
         <ChessBoardComponent />
-        <GameRightPanel/>
+        <GameRightPanel timer={gameTime} chat={chat} sendChat={SendChatMessage} />
       </GameConfigProvider>
     </div >
   );
 }
+
+
+export type ChatMessage = {
+  name: string;
+  message: string;
+};

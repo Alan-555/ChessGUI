@@ -1,6 +1,7 @@
 import React from "react";
 import { GetPieceSrc } from "../resources";
 import { GameConfig } from "../providers/GameConfigProvider";
+import { ServerPos } from "./ServerSync";
 
 export enum PieceType {
     PAWN,
@@ -28,6 +29,44 @@ export type Square = {
     squareRef: React.RefObject<HTMLDivElement | null>;
     selected?: boolean; //Selected by click
     dummy?: boolean; //Used for editing
+}
+
+export class Position{
+    file : number;
+    rank : number;
+
+    private constructor(file : number, rank : number) {
+        this.file = file;
+        this.rank = rank;
+    }
+
+    public static Position(file : number, rank : number) : Position;
+    public static Position(file : string, rank : number) : Position;
+
+    public static Position(file : number|string, rank : number) :Position{
+        if(typeof(file) == "number"){
+            return new Position(file,rank);
+        }
+        else{
+            let file_ =  file.charCodeAt(0) - "A".charCodeAt(0);
+            return new Position(file_, rank);
+        }
+    }
+
+    public ToServerPos() : ServerPos{
+        return {
+            file : String.fromCharCode(this.file + "A".charCodeAt(0)),
+            rank : this.rank
+        }
+    }
+
+
+    
+}
+
+export type Move = {
+    from : Position,
+    to : Position
 }
 
 export class ChessBoard {

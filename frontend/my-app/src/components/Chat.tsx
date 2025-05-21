@@ -1,9 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { ChatMessage } from '../pages/Game';
 
-export interface ChatMessage {
-    name: string;
-    message: string;
-}
 
 interface ChatProps {
     messages: ChatMessage[];

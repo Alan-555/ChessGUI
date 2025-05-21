@@ -1,17 +1,12 @@
-import { Box, Flex } from "@chakra-ui/react";
-import Chat, { ChatMessage } from "./Chat";
+import { Box, Button, Flex } from "@chakra-ui/react";
 import Timer from "./Timer";
 import MoveHistory from "./MoveHistory";
 import { useState } from "react";
+import { ChatMessage } from "../pages/Game";
+import Chat from "./Chat";
 
-const GameRightPanel = () => {
-    const [chat, setChat] = useState<ChatMessage[]>(
-        [
-            { name: "Opponent", message: "Hello!" },
-            { name: "You", message: "Hi there!" },
+const GameRightPanel = ({chat,sendChat,timer}:{chat:ChatMessage[],sendChat:(message : string)=>void, timer: {whiteTime:number, blackTime:number} | null}) => {
 
-        ]
-    );
     return (
         <Flex
             direction="column"
@@ -25,12 +20,16 @@ const GameRightPanel = () => {
             {/* Top section */}
             <Box maxHeight={"40vh"}  flex="1" bg="gray.100" borderRadius="md" p={4} boxShadow="sm">
                 <Chat messages={chat} onSendMessage={(message) => {
-                    setChat((prev) => [...prev, { name: "You", message }]);
+                    sendChat(message);
                 }} />
             </Box>
 
             <Box maxHeight={"15vh"} flex="1" bg="gray.100" borderRadius="md" p={4} boxShadow="sm">
-                <Timer activeTimer={true} timeBlack={120} timeWhite={120} />
+                {
+                    timer!=null && (
+                        <Timer activeTimer={true} timeBlack={timer.blackTime} timeWhite={timer.whiteTime} />
+                    )
+                }
             </Box>
 
             <Box height={"40vh"} flex="1" bg="gray.100" borderRadius="md" p={4} boxShadow="sm">

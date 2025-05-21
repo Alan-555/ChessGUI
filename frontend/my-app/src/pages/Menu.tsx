@@ -9,7 +9,6 @@ import { AnimatePresence } from "framer-motion";
 
 export default function Menu() {
   const navigate = useNavigate();
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [prefsOpen, setPrefsOpen] = useState(false);
   return (
