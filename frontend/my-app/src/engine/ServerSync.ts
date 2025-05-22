@@ -9,6 +9,7 @@ export enum MessageType {
     CHAT, //bi-directional
 
     INIT_HOST_START, //client(table host)->server (starting game sent config)
+    INIT_HOST_WAIT, //server->client (wait for opponent to connect)
     INIT_HOST_VS_AI_START, //client(table host)->server (wanna play vs AI)
     INIT_CLIENT_START, //client(table client)->server (connecting to this table)
     INIT_GO, //server->client (your game is now go)
@@ -17,41 +18,44 @@ export enum MessageType {
     GAME_RESIGN, //client->server (I resign)
 
     REG_SEND, //client->server (I exist, acknowledge, please)
-    REG_ACKNOWLEDGE //server->client (Your existence has been acknowledged)
+    REG_ACKNOWLEDGE, //server->client (Your existence has been acknowledged)
+
+    CLIENT_ERROR, //server->client (error due to client)
+    SERVER_ERROR  //server->client (server error)
 }
 
 export type Message =
     | {
-        clientID : string
+        clientID: string
         type: MessageType.REG_SEND;
         data: null;
     }
     | {
-        clientID : string
+        clientID: string
         type: MessageType.CHAT;
         data: {
             message: string
         };
     }
     | {
-        clientID : string
+        clientID: string
         type: MessageType.INIT_HOST_START;
         data: MessageStateSync;
     }
     | {
-        clientID : string
+        clientID: string
         type: MessageType.INIT_HOST_VS_AI_START;
         data: MessageStateSync;
     }
     | {
-        clientID : string
+        clientID: string
         type: MessageType.INIT_CLIENT_START;
         data: {
             gameID: string
         }
     }
     | {
-        clientID : string
+        clientID: string
         type: MessageType.MOVE,
         data: {
             from: ServerPos,
@@ -59,30 +63,45 @@ export type Message =
         }
     }
     | {
-        clientID : string
+        clientID: string
         type: MessageType.GAME_RESIGN,
         data?: undefined
     }
     | {
-        clientID : string
+        clientID: string
         type: MessageType.GAME_OVER
         data: GameOverData
     }
     | {
-        clientID : string
+        clientID: string
         type: MessageType.SYNC,
         data: MessageStateSync
     }
     | {
-        clientID : string
+        clientID: string
         type: MessageType.REG_ACKNOWLEDGE,
         data: null
     }
     | {
-        clientID : string
+        clientID: string
         type: MessageType.SYNC_REQUEST,
         data: null
     }
+    | {
+        clientID: string,
+        type: MessageType.CLIENT_ERROR,
+        data: {
+            errType: ClientErrors,
+            message?: ""
+        }
+    }
+    | {
+        clientID: string,
+        type: MessageType.INIT_HOST_WAIT,
+        data: string
+    }
+
+export type ClientErrors = "INVALID_ID";
 
 export type ServerPos = {
     file: string,
@@ -100,7 +119,7 @@ export type GameOverData = {
 
 export type MessageStateSync = {
     boardFen: string;
-    playerToMove: string;
+    playerToMove: PieceColor;
     whiteTime: number;
     blackTime: number;
     legalMoves?: string[];
@@ -143,8 +162,9 @@ export class ServerSync {
     private static instance: ServerSync;
     private socket: WebSocket | null = null;
     private queue: Queue = new Queue();
-    private clientID : string = "145";
-
+    private clientID: string = Math.floor(Math.random()*1000).toString();
+    private errorHandler: ((e: Event) => void) | undefined;
+    private onCloseHandler: ((e: CloseEvent) => void) | undefined;
 
     private constructor() {
         this.socket = null;
@@ -168,6 +188,13 @@ export class ServerSync {
         return this.queue.DequeueFor(type);
     }
 
+    public SetErrorHandler(handler: (e: Event) => void) {
+        this.errorHandler = handler;
+    }
+    public SetOnClose(handler: (e: CloseEvent) => void) {
+        this.onCloseHandler = handler;
+    }
+
     public async Connect(url: string) {
         if (this.socket) {
             console.error("Already connected to a server.");
@@ -187,13 +214,15 @@ export class ServerSync {
 
         };
 
-        this.socket.onclose = () => {
-            console.log("Disconnected from the server.");
+        this.socket.onclose = (e) => {
+            console.log("Disconnected from the server.", e);
             this.socket = null;
+            this.onCloseHandler?.(e);
         };
 
         this.socket.onerror = (error) => {
             console.error("WebSocket error: ", error);
+            this.errorHandler?.(error);
         };
         await new Promise<void>((resolve) => {
             if (this.socket && this.socket.readyState === WebSocket.OPEN) {
@@ -229,8 +258,8 @@ export class ServerSync {
         );
     }
 
-    private async Send<K extends MessageType>(message: Omit<Message,"clientID">, waitFor?: K): Promise<Extract<Message, { type: K }> | undefined> {
-        const message_ = {...message, clientID:this.clientID };
+    private async Send<K extends MessageType>(message: Omit<Message, "clientID">, waitFor?: K): Promise<Extract<Message, { type: K }> | undefined> {
+        const message_ = { ...message, clientID: this.clientID };
         if (waitFor !== undefined && waitFor !== null) {
             return new Promise(
                 (resolve, reject) => {//TODO: implement reject
@@ -254,11 +283,17 @@ export class ServerSync {
         }
     }
 
-    public async GetSync(){
+    public async GetSync() {
         return await this.Send({
             type: MessageType.SYNC_REQUEST,
-            data:null
+            data: null
         }, MessageType.SYNC);
+    }
+    public async RequestSync() {
+        return await this.Send({
+            type: MessageType.SYNC_REQUEST,
+            data: null
+        });
     }
 
     private async RegisterConnection() {
@@ -268,8 +303,8 @@ export class ServerSync {
         }, MessageType.REG_ACKNOWLEDGE);
     }
 
-    public async InitGameAsHost(initCfg: GameConfig, isAI? : boolean, setStatus? :  (m : string)=>Promise<void>) {
-        if(!setStatus) setStatus = async (s)=>{};
+    public async InitGameAsHost(initCfg: GameConfig, isAI?: boolean, setStatus?: (m: string) => Promise<void>) {
+        if (!setStatus) setStatus = async (s) => { };
         await this.RegisterConnection();
         await setStatus("Logged in. Sending config...");
         let time = initCfg.time;
@@ -280,18 +315,20 @@ export class ServerSync {
             playerToMove: initCfg.onlineThisPlayer,
             youAre: initCfg.onlineThisPlayer,
         }
-        await this.Send({
+        let gameId = (await this.Send({
             type: isAI ? MessageType.INIT_HOST_VS_AI_START : MessageType.INIT_HOST_START,
             data: initGame
-        }, MessageType.INIT_GO);
+        }, MessageType.INIT_HOST_WAIT))?.data;
+
+        await setStatus("Table created with id"+gameId+". Waiting for an opponent to join...");
+
+        await this.WaitForMessage(MessageType.INIT_GO);
+
         await setStatus("Game ready. Running initial sync...");
-        this.Send({
-            type: MessageType.SYNC_REQUEST,
-            data:null
-        }, MessageType.SYNC).then(e=>ChessBoard.MOVES_DIRTY_FIX = e!.data);
     }
 
     public async InitGameAsClient(gameId: string) {
+        
         await this.RegisterConnection();
         await this.Send({
             type: MessageType.INIT_CLIENT_START,
@@ -307,6 +344,10 @@ export class ServerSync {
         if (!cfg) {
             throw new Error("Connection failed!");
         }
+        this.Send({
+            type: MessageType.SYNC_REQUEST,
+            data:null
+        });
         return cfg;
     }
 

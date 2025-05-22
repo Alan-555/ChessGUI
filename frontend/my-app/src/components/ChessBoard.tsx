@@ -92,7 +92,7 @@ export default function ChessBoardComponent() {
         if (gameConfig?.GameMode == "BOARD_SETUP") return true;
         if (piece === null) return true;
         if (piece.color !== gameConfig?.onlineThisPlayer) return false;
-
+        if(GlobalBoard.currentSync?.playerToMove!=gameConfig.onlineThisPlayer)return false;
         return true;
     }
 

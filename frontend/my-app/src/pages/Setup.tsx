@@ -18,6 +18,7 @@ import {
     ModalContent,
     ModalHeader,
     ModalOverlay,
+    useToast,
 } from '@chakra-ui/react';
 import { img_b_king, img_w_king } from '../resources';
 import { ImageSplit } from '../components/ImageSplit';
@@ -56,6 +57,8 @@ function ChessSetup({ mode }: { mode: GameMode }) {
     }, [useTimer]);
 
     const [isOpen, setIsOpen] = useState(false);
+
+    const toast = useToast();
 
     const setSide = (newSide: 'white' | 'black' | 'random') => {
         setSide_(newSide);
@@ -218,7 +221,20 @@ function ChessSetup({ mode }: { mode: GameMode }) {
                 <GameRaw gameConfig={setupBoardCfg} />
             </Overlay>
             <Overlay show={isLoad} hideConfirm={true}>
-                <LoadingScreen config={config}/>
+                <LoadingScreen config={config}
+                    abort={
+                        (t, d) => {
+                            startLoad(false);
+                            toast({
+                                title: t,
+                                description: d,
+                                status: "error",
+                                duration: 5000,
+                                isClosable: true,
+                            })
+                        }
+                    }
+                />
             </Overlay>
 
         </>

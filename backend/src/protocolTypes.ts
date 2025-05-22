@@ -5,6 +5,7 @@ export enum MessageType {
     CHAT, //bi-directional
 
     INIT_HOST_START, //client(table host)->server (starting game sent config)
+    INIT_HOST_WAIT, //server->client (wait for opponent to connect)
     INIT_HOST_VS_AI_START, //client(table host)->server (wanna play vs AI)
     INIT_CLIENT_START, //client(table client)->server (connecting to this table)
     INIT_GO, //server->client (your game is now go)
@@ -13,7 +14,10 @@ export enum MessageType {
     GAME_RESIGN, //client->server (I resign)
 
     REG_SEND, //client->server (I exist, acknowledge, please)
-    REG_ACKNOWLEDGE //server->client (Your existence has been acknowledged)
+    REG_ACKNOWLEDGE, //server->client (Your existence has been acknowledged)
+
+    CLIENT_ERROR, //server->client (error due to client)
+    SERVER_ERROR  //server->client (server error)
 }
 
 export type Message =
@@ -79,12 +83,26 @@ export type Message =
         type: MessageType.SYNC_REQUEST,
         data: null
     }
-
     | {
         clientID: string,
         type: MessageType.INIT_GO,
         data: null
     }
+    | {
+        clientID: string,
+        type: MessageType.CLIENT_ERROR,
+        data: {
+            errType : ClientErrors,
+            message?: ""
+        }
+    }
+    | {
+        clientID: string,
+        type: MessageType.INIT_HOST_WAIT,
+        data: string
+    }
+
+export type ClientErrors = "INVALID_ID";
 
 export type ServerPos = {
     file: string,
@@ -102,7 +120,7 @@ export type GameOverData = {
 
 export type MessageStateSync = {
     boardFen: string;
-    playerToMove: string;
+    playerToMove: PieceColor;
     whiteTime: number;
     blackTime: number;
     legalMoves?: string[];
@@ -121,8 +139,8 @@ export type Position = {
     rank: number
 }
 
-export function GetServerMove(move : Move){
-    return move.from.file+move.from.rank+move.to.file+move.to.rank;
+export function GetServerMove(move: Move) {
+    return move.from.file + move.from.rank + move.to.file + move.to.rank;
 }
 
 export function ParseServerMove(moveStr: string): Move {
@@ -140,3 +158,5 @@ export function ParseServerMove(moveStr: string): Move {
         }
     };
 }
+
+export const OtherColor = (color: PieceColor): PieceColor => color == "white" ? "black" : "white";

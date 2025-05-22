@@ -36,10 +36,11 @@ export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
   const once = useRef(false);
 
   useEffect(() => {
+    console.log("crap alerady prepared? "+once.current);
     if (once.current)
       return;
     once.current = true;
-
+    
     ServerSync.Instance.on<string>("onChat", (m) => {
       setChat((prevMessages) => [...prevMessages, { name: "Opponent", message: m }]);
     });
@@ -50,11 +51,14 @@ export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
           whiteTime: m.whiteTime
         });
       GlobalBoard.InitBoard(m.boardFen);
+      GlobalBoard.SetNewSync(m);
       ServerSync.Instance.on<GameOverData>("onGameOver",(e)=>{
         //TODO: game over screen
-      })
+      });
 
     });
+
+    ServerSync.Instance.RequestSync();
 
   });
 

@@ -55,15 +55,18 @@ export class Position {
         }
         else {
             let file_ = file.charCodeAt(0) - "a".charCodeAt(0);
-            return new Position(file_, 8-rank!);
+            return new Position(file_, 8 - rank!);
         }
     }
 
     public ToServerPos(): ServerPos {
         return {
             file: String.fromCharCode(this.file + "a".charCodeAt(0)),
-            rank: 8-this.rank
+            rank: 8 - this.rank
         }
+    }
+    public ToServerPosString(): string {
+        return (String.fromCharCode(this.file + "a".charCodeAt(0)) + (8 - this.rank));
     }
 
 
@@ -86,6 +89,16 @@ export class ChessBoard {
     constructor(fen: string = "SP") {
         this.InitBoard(fen);
     }
+
+    currentSync?: MessageStateSync;
+
+    public SetNewSync(sync: MessageStateSync) {
+        this.currentSync = sync;
+        console.log("Got new sync", sync);
+        
+    }
+
+    public setNewVer: (n: number) => void = () => { };
 
     public InitBoard(fen: string = "SP", editMode: boolean = false) {
         const board: Square[][] = [];
@@ -152,6 +165,12 @@ export class ChessBoard {
 
     public MovePiece(piece: Piece, to: { file: number; rank: number }) {
         if (piece) {
+            if(!this.IsMoveLegal(piece,to)) return;
+
+            ServerSync.Instance.SendMove({
+                from: Position.Position(piece), to:Position.Position(to.file,to.rank)
+            });
+
             if (this.board[to.rank][to.file].dummy) {
                 this.board[piece.rank][piece.file].piece = null;
                 return;
@@ -160,6 +179,8 @@ export class ChessBoard {
             this.board[piece.rank][piece.file].piece = null;
             piece.file = to.file;
             piece.rank = to.rank;
+
+            
         }
     }
 
@@ -170,12 +191,13 @@ export class ChessBoard {
     }
 
     public IsMoveLegal(piece: Piece, to: { file: number; rank: number }): boolean {
-        return true; //TODO: implement move validation
+        let moveStr = Position.Position(piece).ToServerPosString()+Position.Position(to.file, to.rank).ToServerPosString();
+        return this.currentSync?.legalMoves?.includes(moveStr) || false;
     }
-    public static MOVES_DIRTY_FIX : MessageStateSync;
+
     public GetLegalMoves(piece: Piece): Position[] {
-        
-        let moves = ChessBoard.MOVES_DIRTY_FIX.legalMoves!;
+        if (!this.currentSync || !this.currentSync.legalMoves) return [];
+        let moves = this.currentSync.legalMoves;
         let piecePos = Position.Position(piece).ToServerPos();
         return moves
             .filter(p => p.startsWith(piecePos.file + piecePos.rank))

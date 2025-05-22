@@ -2,7 +2,7 @@ import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
 import { buffer } from 'stream/consumers';
 import { Move, ParseServerMove } from './protocolTypes';
 
-type Predicate<T> = ((data : T)=>boolean)
+type Predicate<T> = ((data: T) => boolean)
 
 class AsyncProcessCommunicator {
     private process: ChildProcessWithoutNullStreams;
@@ -11,8 +11,11 @@ class AsyncProcessCommunicator {
         resolve: (output: string) => void;
         reject: (error: Error) => void;
         handle: Predicate<string>
-        buffer: string
+        buffer: string,
+        id : string
     }[] = [];
+
+    private onQueueEmpty: (() => void)[] = [];
 
     constructor(command: string, args: string[]) {
         this.process = spawn(command, args);
@@ -23,22 +26,30 @@ class AsyncProcessCommunicator {
 
     private handleOutput(data: Buffer) {
         if (this.queue.length > 0) {
-            let { resolve, buffer, handle } = this.queue[0];
-            buffer+=data.toString();
-            if(handle(buffer)){
+            let { resolve, buffer, handle, id } = this.queue[0];
+            console.log("("+id+")> "+data.toString());
+            buffer += data.toString();
+            if (handle(buffer)) {
                 resolve(buffer);
                 this.queue.shift();
+                this.onQueueEmpty.forEach(e => e());
+                this.onQueueEmpty = [];
             }
 
         }
     }
 
     sendCommand(command: string, handle?: Predicate<string>): Promise<string> {
-        return new Promise((resolve, reject) => {
-            if(handle)
-                this.queue.push({ command, resolve, reject, handle: handle, buffer:""});
+        return new Promise(async (resolve, reject) => {
+            //wait for empty queue
+            if (this.queue.length != 0)
+                await new Promise<void>((resolve) => {
+                    this.onQueueEmpty.push(resolve);
+                });
+            if (handle)
+                this.queue.push({ command, resolve, reject, handle: handle, buffer: "" , id: Math.round(Math.random()*100).toString()});
             this.process.stdin.write(command + '\n');
-            if(!handle)
+            if (!handle)
                 resolve("");
         });
     }
@@ -56,21 +67,21 @@ class StockfishInterface {
     }
 
     async Init() {
-        let data = await this.communicator.sendCommand("uci",(s)=>s.includes("uciok"));
+        let data = await this.communicator.sendCommand("uci", (s) => s.includes("uciok"));
     }
 
-    async setPosition(pos : string, moves : string[] = []) {
+    async setPosition(pos: string, moves: string[] = []) {
         let moves_ = moves.join(' ');
-        const positionCommand = "position fen "+pos + moves ? " moves "+ moves_ : "";
+        const positionCommand = "position fen " + pos + (moves.length > 0 ? (" moves " + moves_) : "");
         await this.communicator.sendCommand(positionCommand);
     }
 
     async getAllLegalMoves(): Promise<string[]> {
-        let out = await this.communicator.sendCommand("go perft 1",(s)=>s.includes("Nodes searched"));
-        return out.split(/\r?\n/).map((v)=>{
-            if(v.endsWith(": 1"))
+        let out = await this.communicator.sendCommand("go perft 1", (s) => s.includes("Nodes searched"));
+        return out.split(/\r?\n/).map((v) => {
+            if (v.endsWith(": 1"))
                 return v.split(":")[0];
-        }).filter(f=>f!=undefined);        
+        }).filter(f => f != undefined);
     }
 
     async getFen(): Promise<string> {

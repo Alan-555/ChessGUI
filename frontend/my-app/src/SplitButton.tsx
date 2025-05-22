@@ -4,6 +4,7 @@ import {
     HStack,
     Stack,
     useBoolean,
+    useToast,
 } from "@chakra-ui/react";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +21,7 @@ export default function SplitButton() {
     const [gameId, setGameId] = useState("");
 
     const nav = useNavigate();
+    const toast = useToast();
     return (
         <Box
             display="flex"
@@ -90,7 +92,7 @@ export default function SplitButton() {
 
                             <Input
                                 placeholder="Enter game code"
-                                onChange={(e) => { 
+                                onChange={(e) => {
                                     setGameId(e.target.value);
                                 }}
                                 maxLength={12}
@@ -127,7 +129,19 @@ export default function SplitButton() {
                         onlineThisPlayer: "black",
                         startPosition: "",
                         gameID: gameId
-                        }} />
+                    }
+                    }
+                        abort={
+                            (t, d) => {
+                                startLoad(false);
+                                toast({
+                                    duration: 5,
+                                    title: t,
+                                    description: d
+                                })
+                            }
+                        }
+                    />
                 </Overlay>
             </Box>
         </Box>
