@@ -9,17 +9,31 @@ import { AnimatePresence } from "framer-motion";
 import Menu from "./pages/Menu";
 import Preferences from "./pages/Prefs";
 import AnimatedRouteWrapper from "./components/AnimationWrapper";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import ReactDOM from "react-dom/client";
 import ChessSetup from "./pages/Setup";
 import BackButton from "./components/BackButton";
 import Game from "./pages/Game";
 import { GlobalConfigProvider } from "./providers/GlobalConfigProvider";
 import theme from "./theme";
+import { ServerSync } from "./engine/ServerSync";
 
 function AppRoutes() {
   const location = useLocation();
+  const prevLocation = useRef(location);
 
+  useEffect(() => {
+    // Runs when location changes
+    if (prevLocation.current.pathname !== location.pathname) {
+      console.log('Route changed to '+location.pathname);
+      if(ServerSync.Instance.IsConnected && location.pathname !=="/play"){
+        ServerSync.Instance.Quit();
+      }
+
+      // Update previous location
+      prevLocation.current = location;
+    }
+  }, [location]);
   return (
     <Box position="relative" width="100vw" height="100vh" overflow="hidden">
       <AnimatePresence mode="wait">

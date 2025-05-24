@@ -131,7 +131,7 @@ type QueueRecord = {
     onReceive: (data: any) => void;
 }
 
-export type SyncEvents = "onChat" | "onSync" | "onGameOver";
+export type SyncEvents = "onChat" | "onSync" | "onGameOver" | "surrender";
 
 
 class Queue {
@@ -165,6 +165,10 @@ export class ServerSync {
     private clientID: string = Math.floor(Math.random()*1000).toString();
     private errorHandler: ((e: Event) => void) | undefined;
     private onCloseHandler: ((e: CloseEvent) => void) | undefined;
+
+    public get IsConnected(){
+        return this.socket !== null && this.socket.readyState === WebSocket.OPEN;
+    }
 
     private constructor() {
         this.socket = null;
@@ -257,7 +261,6 @@ export class ServerSync {
             }
         );
     }
-
     private async Send<K extends MessageType>(message: Omit<Message, "clientID">, waitFor?: K): Promise<Extract<Message, { type: K }> | undefined> {
         const message_ = { ...message, clientID: this.clientID };
         if (waitFor !== undefined && waitFor !== null) {
@@ -373,11 +376,11 @@ export class ServerSync {
 
 
     public Quit(): void {
-        this.Send(
-            {
-                type: MessageType.GAME_RESIGN,
-            }
-        );
+        // this.Send(
+        //     {
+        //         type: MessageType.GAME_RESIGN,
+        //     }
+        // );
         this.Disconnect();
     }
 
@@ -393,6 +396,9 @@ export class ServerSync {
                     break;
                 case MessageType.GAME_OVER:
                     this.emit("onGameOver", event.data);
+                    break;
+                case MessageType.GAME_RESIGN:
+                    this.emit("surrender",undefined);
                     break;
             }
             //TODO: buffer?

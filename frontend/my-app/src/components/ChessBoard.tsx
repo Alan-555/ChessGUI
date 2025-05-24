@@ -7,6 +7,7 @@ import { ChessBoard, Piece, PieceType, Square } from "../engine/ChessBoardLogic"
 import { useGameConfig } from "../providers/GameConfigProvider";
 import SetupPieceSpawner from "./SetupPieceSpawner";
 import { GlobalBoard } from "../pages/Game";
+import GameMessage from "./GameMessage";
 
 
 export type DragContext = {
@@ -135,6 +136,7 @@ export default function ChessBoardComponent() {
     return (
         <>
             <Grid templateColumns={repeat} templateRows={repeat} gap={0}>
+                
                 <PieceDrag dragContext={dragContext} setDragContext={setDragContext} onTrueDrag={onTrueDrag}></PieceDrag>
                 {theBoard.map((row, rowIndex) =>
                     row.map((square, colIndex) => {

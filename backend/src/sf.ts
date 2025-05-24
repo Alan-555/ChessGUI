@@ -26,11 +26,11 @@ class AsyncProcessCommunicator {
 
     private handleOutput(data: Buffer) {
         if (this.queue.length > 0) {
-            let { resolve, buffer, handle, id } = this.queue[0];
+            let { resolve, handle, id } = this.queue[0];
             console.log("("+id+")> "+data.toString());
-            buffer += data.toString();
-            if (handle(buffer)) {
-                resolve(buffer);
+            this.queue[0].buffer += data.toString();
+            if (handle(this.queue[0].buffer)) {
+                resolve(this.queue[0].buffer);
                 this.queue.shift();
                 this.onQueueEmpty.forEach(e => e());
                 this.onQueueEmpty = [];

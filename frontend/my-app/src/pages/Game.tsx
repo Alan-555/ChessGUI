@@ -10,11 +10,25 @@ import { Overlay } from "../components/Overlay";
 import GameRightPanel from "../components/GameRightPanel";
 import { ChessBoard, PieceColor } from "../engine/ChessBoardLogic";
 import { GameOverData, MessageStateSync, ServerSync } from "../engine/ServerSync";
+import GameMessage, { GameMessageProps } from "../components/GameMessage";
+import { useNavigate } from "react-router-dom";
 
 export const GlobalBoard: ChessBoard = new ChessBoard("SP");
 
 export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
+
+  const nav = useNavigate();
+
   const [boardFen, setBoardFen] = useState<string>(gameConfig.startPosition);
+  const [gameMessage, setGameMessage] = useState<GameMessageProps>({
+    show : false,
+    buttonText:"",
+    message:"",
+    onButtonClick() {
+        
+    },
+    title:""
+  });
   const [gameTime, setGameTime] = useState<{ whiteTime: number, blackTime: number } | null>(gameConfig.time === undefined ? null : {
     blackTime: gameConfig.time,
     whiteTime: gameConfig.time
@@ -55,6 +69,18 @@ export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
       ServerSync.Instance.on<GameOverData>("onGameOver",(e)=>{
         //TODO: game over screen
       });
+      ServerSync.Instance.on("surrender", ()=>{
+        setGameMessage({
+          title:"You win!",
+          message:"Your opponent either left, or resigned.",
+          buttonText:"To menu",
+          onButtonClick() {
+              nav("/");
+          },
+          show:true
+
+        })
+      });
 
     });
 
@@ -77,6 +103,8 @@ export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
         </Overlay>
       )}
       <GameConfigProvider value={gameConfig}>
+        
+        <GameMessage {...gameMessage} />
         <ChessBoardComponent />
         <GameRightPanel timer={gameTime} chat={chat} sendChat={SendChatMessage} />
       </GameConfigProvider>

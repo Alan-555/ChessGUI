@@ -85,15 +85,18 @@ class WebSocketSingleton {
             ws.on("close", (code, reason) => {
                 console.log("Closing connection form " + code + " reason: " + reason);
                 for (const client in Connection.connections) {
-                    const player = Connection.connections[client];
-                    let other = player.GetOpponentSocket();
-                    player.Dispose();
+                    const connection = Connection.connections[client];
+                    if(connection.GetPlayer()?.socket!=ws) continue;
+                    let other = connection.GetOpponentSocket();
+                    connection.Dispose();
                     delete Connection.connections[client];
-                    if (other)
+                    if (other){
                         this.SendMessageTo(other, {
                             type: MessageType.GAME_RESIGN,
                             data: null
-                        })
+                        });
+                        other.close();
+                    }
                     break;
 
                 }
