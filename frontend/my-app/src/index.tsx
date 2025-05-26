@@ -3,6 +3,7 @@ import {
   Routes,
   Route,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
 import { Box, ChakraProvider } from "@chakra-ui/react";
 import { AnimatePresence } from "framer-motion";
@@ -19,15 +20,17 @@ import theme from "./theme";
 import { ServerSync } from "./engine/ServerSync";
 
 function AppRoutes() {
+  const nav = useNavigate();
   const location = useLocation();
   const prevLocation = useRef(location);
-
+  
   useEffect(() => {
     // Runs when location changes
     if (prevLocation.current.pathname !== location.pathname) {
       console.log('Route changed to '+location.pathname);
+      console.log(location.state);
       if(ServerSync.Instance.IsConnected && location.pathname !=="/play"){
-        ServerSync.Instance.Quit();
+        ServerSync.Instance.Quit("Client navigated out of session"); //Going away
       }
 
       // Update previous location
@@ -52,7 +55,21 @@ function AppRoutes() {
           />
           <Route
             path="/play"
-            element={<AnimatedRouteWrapper><Game gameConfig={location.state} /></AnimatedRouteWrapper>}
+            element={
+              <AnimatedRouteWrapper>
+          {location.state === null&&location.pathname==="/play" ? (
+            // Redirect to home if gameConfig is undefined
+            (() => {
+              console.log("nav back!!!!");
+              
+                window.location.href = "/";
+              return null;
+            })()
+          ) : (
+            <Game gameConfig={location.state} />
+          )}
+              </AnimatedRouteWrapper>
+            }
           />
         </Routes>
 

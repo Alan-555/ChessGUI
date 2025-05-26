@@ -30,6 +30,7 @@ export type Message =
         clientID: string
         type: MessageType.CHAT;
         data: {
+            isServerMessage : boolean
             message: string
         };
     }
@@ -114,9 +115,11 @@ type Register = {
 }
 
 export type GameOverData = {
-    reason: "Checkmate" | "Stalemate" | "Surrender" | "Connection Error" | "General",
-    winner: PieceColor
+    reason: GameOverReason,
+    winner: PieceColor | null
 }
+
+export type GameOverReason = "CHECKMATE" | "STALEMATE" | "SURRENDER" | "CONN_ERROR" | "GENERAL";
 
 export type MessageStateSync = {
     boardFen: string;
@@ -124,7 +127,13 @@ export type MessageStateSync = {
     whiteTime: number;
     blackTime: number;
     legalMoves?: string[];
-    youAre: PieceColor
+    youAre: PieceColor;
+    sfDifficulty?: number; //AI difficulty, if applicable
+    isInCheck?: boolean; //if the player to move is in check
+
+    //server-side only
+    gameStartTimestamp?: number; //timestamp when the game started
+    maxTime?: number; //max time for each player in milliseconds
 }
 
 export type PieceColor = "white" | "black";

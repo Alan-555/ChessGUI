@@ -41,7 +41,7 @@ function ChessSetup({ mode }: { mode: GameMode }) {
     const [useTimer, setUseTimer] = useState(false);
     const [yourTime, setYourTime] = useState("30");
     const [fen, setFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
-    const [difficulty, setDifficulty] = useState('Beginner');
+    const [difficulty, setDifficulty] = useState('0');
 
     const [isLoad, startLoad] = useState(false);
 
@@ -94,7 +94,8 @@ function ChessSetup({ mode }: { mode: GameMode }) {
         GameMode: mode,
         onlineThisPlayer: actualSide,
         startPosition: fen,
-        time: Number.parseInt(yourTime)
+        time: Number.parseInt(yourTime)*1000,
+        sfDifficulty : mode === "PLAY_LOCAL_AI" ? Number.parseInt(difficulty) : undefined
     }
 
 
@@ -201,9 +202,9 @@ function ChessSetup({ mode }: { mode: GameMode }) {
                     {mode === "PLAY_LOCAL_AI" && (
                         <Box w="full">
                             <Text fontSize="xl" mb={2}>Stockfish difficulty</Text>
-                            <Select size="lg" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
-                                {['Beginner', 'Easy', 'Medium', 'Hard', 'Master'].map(level => (
-                                    <option key={level} value={level}>{level}</option>
+                            <Select size="lg" value={difficulty} onChange={(e) => setDifficulty(e.currentTarget.value)}>
+                                {[['Beginner',0], ['Easy',5], ['Medium',10], ['Hard',15], ['Master',20]].map(level => (
+                                    <option key={level[0]} value={level[1]}>{level[0]}</option>
                                 ))}
                             </Select>
                         </Box>
@@ -213,8 +214,12 @@ function ChessSetup({ mode }: { mode: GameMode }) {
                 </VStack>
             </Box>
             <Overlay show={isOpen} onClose={() => {
-                let fen = GlobalBoard.CreateFen();
-                setFen(fen);
+                let fen_ = GlobalBoard.CreateFen();
+                const oldAppend = fen.split(" ").slice(1);
+                if(oldAppend.length > 0) {
+                    fen_ += " " + oldAppend.join(" ");
+                }
+                setFen(fen_);
                 setIsOpen(false);
 
             }}>

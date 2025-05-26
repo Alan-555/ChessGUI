@@ -10,6 +10,7 @@ export type GameConfig = {
     onlineThisPlayer : PieceColor;
     time? : number;
     gameID? : string;
+    sfDifficulty?: number; //For AI games
 };
 
 

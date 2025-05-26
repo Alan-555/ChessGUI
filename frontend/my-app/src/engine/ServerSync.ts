@@ -34,6 +34,7 @@ export type Message =
         clientID: string
         type: MessageType.CHAT;
         data: {
+            isServerMessage: boolean,
             message: string
         };
     }
@@ -65,7 +66,7 @@ export type Message =
     | {
         clientID: string
         type: MessageType.GAME_RESIGN,
-        data?: undefined
+        data: null
     }
     | {
         clientID: string
@@ -113,9 +114,10 @@ type Register = {
 }
 
 export type GameOverData = {
-    reason: "Checkmate" | "Stalemate" | "Surrender" | "Connection Error" | "General",
-    winner: PieceColor
+    reason: GameOverReason,
+    winner: PieceColor | null;
 }
+export type GameOverReason = "CHECKMATE" | "STALEMATE" | "SURRENDER" | "CONN_ERROR" | "GENERAL" | "TIMEOUT" | "DRAW";
 
 export type MessageStateSync = {
     boardFen: string;
@@ -123,15 +125,19 @@ export type MessageStateSync = {
     whiteTime: number;
     blackTime: number;
     legalMoves?: string[];
-    youAre: PieceColor
+    youAre: PieceColor;
+    sfDifficulty?: number; //AI difficulty, if applicable
+    isInCheck?: boolean; //if the player to move is in check
 }
 
 type QueueRecord = {
     waitFor: MessageType,
     onReceive: (data: any) => void;
+    rejectFor?: MessageType,
+    onReject?: (data: any) => void;
 }
 
-export type SyncEvents = "onChat" | "onSync" | "onGameOver" | "surrender";
+export type SyncEvents = "onChat" | "onSync" | "onGameOver" | "surrender" | "onSystemChat" | "onClose";
 
 
 class Queue {
@@ -154,6 +160,13 @@ class Queue {
         }
         return undefined;
     }
+    DequeueRejectFor(type: MessageType): QueueRecord | undefined {
+        let i = this.queue.findIndex(p => p.rejectFor === type);
+        if (i !== -1) {
+            return this.queue.splice(i, 1)[0];
+        }
+        return undefined;
+    }
 }
 
 
@@ -162,11 +175,9 @@ export class ServerSync {
     private static instance: ServerSync;
     private socket: WebSocket | null = null;
     private queue: Queue = new Queue();
-    private clientID: string = Math.floor(Math.random()*1000).toString();
-    private errorHandler: ((e: Event) => void) | undefined;
-    private onCloseHandler: ((e: CloseEvent) => void) | undefined;
+    private clientID: string = Math.floor(Math.random() * 1000).toString();
 
-    public get IsConnected(){
+    public get IsConnected() {
         return this.socket !== null && this.socket.readyState === WebSocket.OPEN;
     }
 
@@ -191,14 +202,9 @@ export class ServerSync {
     public DequeueFor(type: MessageType): QueueRecord | undefined {
         return this.queue.DequeueFor(type);
     }
-
-    public SetErrorHandler(handler: (e: Event) => void) {
-        this.errorHandler = handler;
+    public DequeueRejectFor(type: MessageType): QueueRecord | undefined {
+        return this.queue.DequeueRejectFor(type);
     }
-    public SetOnClose(handler: (e: CloseEvent) => void) {
-        this.onCloseHandler = handler;
-    }
-
     public async Connect(url: string) {
         if (this.socket) {
             console.error("Already connected to a server.");
@@ -206,7 +212,6 @@ export class ServerSync {
         }
         this.queue = new Queue();
         this.socket = new WebSocket(url);
-        this.listeners.clear();
 
         this.socket.onopen = () => {
             console.log("Connected to the server.");
@@ -221,12 +226,12 @@ export class ServerSync {
         this.socket.onclose = (e) => {
             console.log("Disconnected from the server.", e);
             this.socket = null;
-            this.onCloseHandler?.(e);
+            this.emit("onClose", e);
+            this.listeners.clear();
         };
 
         this.socket.onerror = (error) => {
             console.error("WebSocket error: ", error);
-            this.errorHandler?.(error);
         };
         await new Promise<void>((resolve) => {
             if (this.socket && this.socket.readyState === WebSocket.OPEN) {
@@ -261,7 +266,10 @@ export class ServerSync {
             }
         );
     }
-    private async Send<K extends MessageType>(message: Omit<Message, "clientID">, waitFor?: K): Promise<Extract<Message, { type: K }> | undefined> {
+    private async Send<K extends MessageType>(message: Omit<Message, "clientID">, waitFor?: K, rejectOn?: K): Promise<Extract<Message, { type: K }> | undefined> {
+        if(!this.IsConnected){
+            return;
+        }
         const message_ = { ...message, clientID: this.clientID };
         if (waitFor !== undefined && waitFor !== null) {
             return new Promise(
@@ -272,16 +280,20 @@ export class ServerSync {
                         onReceive(data) {
                             resolve(data);
                         },
-                    })
+                        rejectFor: rejectOn,
+                        onReject(data) {
+                            reject(data);
+                        }
+                    });
                 }
             );
         }
         this.SendJSON(message_);
     }
 
-    private Disconnect(): void {
+    private Disconnect(reason: string): void {
         if (this.socket) {
-            this.socket.close();
+            this.socket.close(1000, reason);
             this.socket = null;
         }
     }
@@ -297,6 +309,13 @@ export class ServerSync {
             type: MessageType.SYNC_REQUEST,
             data: null
         });
+    }
+    public async Resign() {
+        await this.Send({
+            type: MessageType.GAME_RESIGN,
+            data: null
+        });
+        this.Quit("Surrender event raised. Disconnecting...");
     }
 
     private async RegisterConnection() {
@@ -317,28 +336,35 @@ export class ServerSync {
             boardFen: initCfg.startPosition,
             playerToMove: initCfg.onlineThisPlayer,
             youAre: initCfg.onlineThisPlayer,
+            sfDifficulty: initCfg.sfDifficulty
         }
         let gameId = (await this.Send({
             type: isAI ? MessageType.INIT_HOST_VS_AI_START : MessageType.INIT_HOST_START,
             data: initGame
-        }, MessageType.INIT_HOST_WAIT))?.data;
+        }, isAI ? MessageType.INIT_GO : MessageType.INIT_HOST_WAIT, MessageType.CLIENT_ERROR))?.data;
 
-        await setStatus("Table created with id"+gameId+". Waiting for an opponent to join...");
+        if(isAI){
+            await setStatus("Game ready. Running initial sync...");
+            return;
+        }
+        await setStatus("Table created with id" + gameId + ". Waiting for an opponent to join...");
 
         await this.WaitForMessage(MessageType.INIT_GO);
 
         await setStatus("Game ready. Running initial sync...");
     }
 
-    public async InitGameAsClient(gameId: string) {
-        
+    public async InitGameAsClient(gameId: string, setStatus?: (m: string) => Promise<void>) {
+        if (!setStatus) setStatus = async (s) => { };
         await this.RegisterConnection();
+        await setStatus("Logged in. Joining table...");
         await this.Send({
             type: MessageType.INIT_CLIENT_START,
             data: {
                 gameID: gameId
             }
-        }, MessageType.INIT_GO);
+        }, MessageType.INIT_GO, MessageType.CLIENT_ERROR);
+        await setStatus("Connected! Running initial sync...");
         let cfg = (await this.Send({
             type: MessageType.SYNC_REQUEST,
             data: null
@@ -347,9 +373,10 @@ export class ServerSync {
         if (!cfg) {
             throw new Error("Connection failed!");
         }
+        await setStatus("Dispatch");
         this.Send({
             type: MessageType.SYNC_REQUEST,
-            data:null
+            data: null
         });
         return cfg;
     }
@@ -369,42 +396,55 @@ export class ServerSync {
         this.Send({
             type: MessageType.CHAT,
             data: {
+                isServerMessage: false,
                 message: message
             }
         })
     }
 
 
-    public Quit(): void {
+    public Quit(reason: string): void {
         // this.Send(
         //     {
         //         type: MessageType.GAME_RESIGN,
         //     }
         // );
-        this.Disconnect();
+        this.listeners.clear();
+        this.Disconnect(reason);
     }
 
     public ReceiveMessage(event: Message): void {
         let dequeued = this.DequeueFor(event.type);
-        if (!dequeued) {
+        let dequeuedReject = this.DequeueRejectFor(event.type);
+        if (!dequeued && !dequeuedReject) {
             switch (event.type) {
                 case MessageType.CHAT:
-                    this.emit<String>("onChat", event.data.message);
+                    if (event.data.isServerMessage)
+                        this.emit<String>("onSystemChat", event.data.message);
+                    else
+                        this.emit<String>("onChat", event.data.message);
                     break;
                 case MessageType.SYNC:
                     this.emit<MessageStateSync>("onSync", event.data);
                     break;
                 case MessageType.GAME_OVER:
                     this.emit("onGameOver", event.data);
+                    this.Quit("Game concluded as to request by remote host. Client is disconnecting...");
                     break;
                 case MessageType.GAME_RESIGN:
-                    this.emit("surrender",undefined);
+                    this.emit("surrender", undefined);
+                    this.Quit("Game concluded as to request by remote host. Client is disconnecting...");
                     break;
             }
             //TODO: buffer?
             return;
         }
-        dequeued.onReceive(event);
+        if (dequeued) {
+            dequeued.onReceive(event);
+        }
+        else {
+            dequeuedReject!.onReject!(event.data);
+        }
     }
 
     private listeners: Map<SyncEvents, EventCallback[]> = new Map();
@@ -422,6 +462,16 @@ export class ServerSync {
             this.listeners.set(
                 event,
                 handlers.filter(cb => cb !== callback)
+            );
+        }
+    }
+
+    offAll(event: SyncEvents) {
+        const handlers = this.listeners.get(event);
+        if (handlers) {
+            this.listeners.set(
+                event,
+                []
             );
         }
     }

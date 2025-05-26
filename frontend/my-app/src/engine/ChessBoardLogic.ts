@@ -30,6 +30,7 @@ export type Square = {
     squareRef: React.RefObject<HTMLDivElement | null>;
     selected?: boolean; //Selected by click
     dummy?: boolean; //Used for editing
+    inCheck?: boolean; //Used for king exclusively and if the king is in check
 }
 
 export class Position {
@@ -94,13 +95,44 @@ export class ChessBoard {
 
     public SetNewSync(sync: MessageStateSync) {
         this.currentSync = sync;
+        if (sync.isInCheck) {
+            // Find the king of the color in check and set inCheck=true
+            for (let rank = 0; rank < 8; rank++) {
+                for (let file = 0; file < 8; file++) {
+                    const square = this.board[rank][file];
+                    const piece = square.piece;
+                    if (
+                        piece &&
+                        piece.type === PieceType.KING &&
+                        piece.color === sync.playerToMove
+                    ) {
+                        square.inCheck = true;
+                    } else if (square.inCheck) {
+                        square.inCheck = false;
+                    }
+                }
+            }
+        } else {
+            // Clear all inCheck flags
+            for (let rank = 0; rank < 8; rank++) {
+                for (let file = 0; file < 8; file++) {
+                    const square = this.board[rank][file];
+                    if (square.inCheck) {
+                        square.inCheck = false;
+                    }
+                }
+            }
+        }
         console.log("Got new sync", sync);
-        
+
     }
+
+    isEditMode: boolean = false;
 
     public setNewVer: (n: number) => void = () => { };
 
     public InitBoard(fen: string = "SP", editMode: boolean = false) {
+        this.isEditMode = editMode;
         const board: Square[][] = [];
         console.log("Init neww board with FEN: ", fen);
 
@@ -165,11 +197,13 @@ export class ChessBoard {
 
     public MovePiece(piece: Piece, to: { file: number; rank: number }) {
         if (piece) {
-            if(!this.IsMoveLegal(piece,to)) return;
-
-            ServerSync.Instance.SendMove({
-                from: Position.Position(piece), to:Position.Position(to.file,to.rank)
-            });
+            if (!this.IsMoveLegal(piece, to)) return;
+            if (!this.isEditMode)
+                ServerSync.Instance.SendMove({
+                    from: Position.Position(piece), to: Position.Position(to.file, to.rank)
+                });
+            if(this.currentSync)
+                this.currentSync.legalMoves = [];
 
             if (this.board[to.rank][to.file].dummy) {
                 this.board[piece.rank][piece.file].piece = null;
@@ -180,7 +214,7 @@ export class ChessBoard {
             piece.file = to.file;
             piece.rank = to.rank;
 
-            
+
         }
     }
 
@@ -191,7 +225,8 @@ export class ChessBoard {
     }
 
     public IsMoveLegal(piece: Piece, to: { file: number; rank: number }): boolean {
-        let moveStr = Position.Position(piece).ToServerPosString()+Position.Position(to.file, to.rank).ToServerPosString();
+        if (this.isEditMode) return true;
+        let moveStr = Position.Position(piece).ToServerPosString() + Position.Position(to.file, to.rank).ToServerPosString();
         return this.currentSync?.legalMoves?.includes(moveStr) || false;
     }
 
@@ -244,7 +279,7 @@ export class ChessBoard {
                 fen += "/";
             }
         }
-        return fen + " w KQkq - 0 1";
+        return fen;
     }
 
 }
@@ -290,7 +325,7 @@ function EditModeSetup(board: Square[][]) {
 }
 
 export function IsFenValid(fen: string): boolean {
-    const regex = /^(?:[rnbqkpRNBQKP1-8]{1,8}\/){7}[rnbqkpRNBQKP1-8]{1,8} (w|b) (KQ?k?q?|kq?|q?|K?|Q?|) (-|[a-h][1-8]) (\d+) (\d+)$/;
-    return regex.test(fen);
+    const regex = /^((?:[rnbqkpRNBQKP1-8]{1,8}\/){7}[rnbqkpRNBQKP1-8]{1,8}) (w|b) (K?Q?k?q?|-) ((?:[a-h][36])|-) (\d+) ([1-9]\d*)$/;
+    return regex.test(fen) || regex.test(fen+" w - - 0 1");
 }
 

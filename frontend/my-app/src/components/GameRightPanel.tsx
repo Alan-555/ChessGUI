@@ -2,7 +2,7 @@ import { Box, Button, Flex } from "@chakra-ui/react";
 import Timer from "./Timer";
 import MoveHistory from "./MoveHistory";
 import { useState } from "react";
-import { ChatMessage } from "../pages/Game";
+import { ChatMessage, GlobalBoard } from "../pages/Game";
 import Chat from "./Chat";
 
 const GameRightPanel = ({chat,sendChat,timer}:{chat:ChatMessage[],sendChat:(message : string)=>void, timer: {whiteTime:number, blackTime:number} | null}) => {
@@ -27,7 +27,7 @@ const GameRightPanel = ({chat,sendChat,timer}:{chat:ChatMessage[],sendChat:(mess
             <Box maxHeight={"15vh"} flex="1" bg="gray.100" borderRadius="md" p={4} boxShadow="sm">
                 {
                     timer!=null && (
-                        <Timer activeTimer={true} timeBlack={timer.blackTime} timeWhite={timer.whiteTime} />
+                        <Timer activeTimer={GlobalBoard.currentSync?.playerToMove} timeBlack={timer.blackTime} timeWhite={timer.whiteTime} />
                     )
                 }
             </Box>

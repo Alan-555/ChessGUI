@@ -1,24 +1,30 @@
 import React, { useState, useEffect } from 'react';
+import { PieceColor } from '../engine/ChessBoardLogic';
+import { useGlobalConfig } from '../providers/GlobalConfigProvider';
+import { useGameConfig } from '../providers/GameConfigProvider';
 
-const Timer = ({timeWhite,timeBlack, activeTimer}:{timeWhite : number, timeBlack : number, activeTimer : boolean}) => {
-     //TODO: set depening on side settings
-    const topPlayer = true; // true = white, false = black
+const Timer = ({ timeWhite, timeBlack, activeTimer }: { timeWhite: number, timeBlack: number, activeTimer: PieceColor | undefined }) => {
+    const config = useGlobalConfig();
+    const gameSettings = useGameConfig();
+    const bottomColor: PieceColor = config.config.render.preferredPlayerSide === "BottomMe" ? gameSettings!.onlineThisPlayer : "white";
 
-    const [topTime, setTopTime] = useState(topPlayer ? timeWhite : timeBlack);
-    const [bottomTime, setBottomTime] = useState(topPlayer ? timeBlack : timeWhite);
+    const [topTime, setTopTime] = useState(bottomColor === "black" ? timeWhite : timeBlack);
+    const [bottomTime, setBottomTime] = useState(bottomColor === "black" ? timeBlack : timeWhite);
 
-    useEffect(() => {   
+    useEffect(() => {
         const interval = setInterval(() => {
-            if(activeTimer === topPlayer)
-                setTopTime((prev) => prev - 1);
-            else
+            if (activeTimer === bottomColor)
                 setBottomTime((prev) => prev - 1);
+            else if(activeTimer !== undefined)
+                setTopTime((prev) => prev - 1);
         }, 1000);
 
         return () => clearInterval(interval);
     }, []);
 
     const formatTime = (time: number) => {
+        time = time/1000; // Convert milliseconds to seconds
+        time = Math.floor(time);
         const minutes = Math.floor(time / 60);
         const seconds = time % 60;
         return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;

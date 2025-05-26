@@ -148,7 +148,9 @@ export default function ChessBoardComponent() {
                         const isSelected = selectContext.isSelected && selectContext.square === square;
                         if(isSelected)
                             style = {...style,background: "rgb(100, 181, 246)"};
-
+                        if(square.inCheck&&square.piece){
+                            style = {...style,background: "red"};
+                        }
                         if (selectContext.square?.piece)
                             if (board.current.GetLegalMoves(selectContext.square?.piece).some(x => x.file === colIndex && x.rank === rowIndex)) {
                                 style = {...style,background: "green"};

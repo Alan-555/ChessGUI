@@ -17,11 +17,11 @@ class AsyncProcessCommunicator {
 
     private onQueueEmpty: (() => void)[] = [];
 
-    constructor(command: string, args: string[]) {
+    constructor(command: string, args: string[], onClose:(code:number|null)=>void) {
         this.process = spawn(command, args);
         this.process.stdout.on('data', (data) => this.handleOutput(data));
         this.process.stderr.on('data', (data) => console.error(`Error: ${data}`));
-        this.process.on('close', (code) => console.log(`Process exited with code ${code}`));
+        this.process.on('close', (code) => {console.log(`Process exited with code ${code}`); onClose(code)});
     }
 
     private handleOutput(data: Buffer) {
@@ -62,8 +62,8 @@ class AsyncProcessCommunicator {
 class StockfishInterface {
     private communicator: AsyncProcessCommunicator;
 
-    constructor(stockfishPath: string) {
-        this.communicator = new AsyncProcessCommunicator(stockfishPath, []);
+    constructor(stockfishPath: string,onClose:(code:number|null)=>void) {
+        this.communicator = new AsyncProcessCommunicator(stockfishPath, [], onClose);
     }
 
     async Init() {
@@ -74,6 +74,9 @@ class StockfishInterface {
         let moves_ = moves.join(' ');
         const positionCommand = "position fen " + pos + (moves.length > 0 ? (" moves " + moves_) : "");
         await this.communicator.sendCommand(positionCommand);
+    }
+    async setDifficulty(diff: string) {
+        this.communicator.sendCommand("setoption name Skill Level value " + diff);
     }
 
     async getAllLegalMoves(): Promise<string[]> {
@@ -86,11 +89,35 @@ class StockfishInterface {
 
     async getFen(): Promise<string> {
         const output = await this.communicator.sendCommand('d', (s) => s.includes('Checkers:'));
-        const fenLine = output.split('\n').find(line => line.trim().startsWith('Fen:'));
+        const fenLine = output.split(/\r?\n/).find(line => line.trim().startsWith('Fen:'));
         if (fenLine) {
             return fenLine.replace('Fen:', '').trim();
         }
         throw new Error('FEN not found in output');
+    }
+
+    async isInCheck(): Promise<boolean> {
+        const output = await this.communicator.sendCommand('d', (s) => s.includes('Checkers:'));
+        const checkLine = output.split(/\r?\n/).find(line => line.trim().startsWith('Checkers:'));
+        if (checkLine) {
+            return checkLine.replace('Checkers:', '').trim().length > 0;
+        }
+        throw new Error('Check status not found in output');
+    }
+    
+    async getBestMove(): Promise<string> {
+        const output = await this.communicator.sendCommand('go movetime 1000',  (buffer) => {
+            const bestMoveLine = buffer.split(/\r?\n/).find((line) => line.startsWith('bestmove'));
+            if (bestMoveLine) {
+                return true;
+            }
+            return false;
+        });
+        const bestMoveLine = output.split(/\r?\n/).find((line) => line.startsWith('bestmove'));
+        if (bestMoveLine) {
+            return bestMoveLine.split(' ')[1];
+        }
+        throw new Error('Best move not found');
     }
 
     /*async printBoard(): Promise<string> {
@@ -101,20 +128,7 @@ class StockfishInterface {
         return output;
     }
 
-    async getBestMove(): Promise<string> {
-        const output = await this.communicator.sendCommand('go movetime 1000', (buffer) => {
-            const bestMoveLine = buffer.split('\n').find((line) => line.startsWith('bestmove'));
-            if (bestMoveLine) {
-                return { isComplete: true, output: bestMoveLine };
-            }
-            return { isComplete: false, output: '' };
-        });
-        const bestMoveLine = output.split('\n').find((line) => line.startsWith('bestmove'));
-        if (bestMoveLine) {
-            return bestMoveLine.split(' ')[1];
-        }
-        throw new Error('Best move not found');
-    }
+    
 
     async doMove(move: string) {
         this.moves.push(move);

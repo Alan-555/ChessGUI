@@ -95,11 +95,14 @@ export default function SplitButton() {
                                 onChange={(e) => {
                                     setGameId(e.target.value);
                                 }}
-                                maxLength={12}
+                                maxLength={4}
                                 autoFocus
+                                type="number"
                                 value={gameId}
-
-
+                                onFocus={e => {
+                                    const target = e.currentTarget;
+                                    target.select();
+                                }}
                             />
                             <Button
                                 className="button"
@@ -134,11 +137,14 @@ export default function SplitButton() {
                         abort={
                             (t, d) => {
                                 startLoad(false);
+                                console.log("FUJ");
                                 toast({
-                                    duration: 5,
                                     title: t,
-                                    description: d
-                                })
+                                    description: d,
+                                    status: "error",
+                                    duration: 5000,
+                                    isClosable: true,
+                                });
                             }
                         }
                     />
