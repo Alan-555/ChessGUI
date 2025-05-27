@@ -164,7 +164,7 @@ class WebSocketSingleton {
         }
         if (data.type == MessageType.INIT_HOST_START || data.type == MessageType.INIT_HOST_VS_AI_START) {
             const verifyResult = this.VerifyFen(data.data.boardFen, data.data.youAre);
-            if(verifyResult !== undefined) {
+            if (verifyResult !== undefined) {
                 Reply({
                     type: MessageType.CLIENT_ERROR,
                     data: {
@@ -172,6 +172,7 @@ class WebSocketSingleton {
                         message: verifyResult
                     } as any
                 });
+                return;
             }
             const isAi = data.type == MessageType.INIT_HOST_VS_AI_START;
             const ts = new TableSession(data.data, { color: data.data.youAre, socket: socket }, isAi ? undefined : NewTableID(), (code) => { conn.CloseTable("A server error has occurred. Game terminated. (stockfish stop code " + code + ")", true); }, { color: OtherColor(data.data.youAre), socket: "NOT_PRESENT" });
@@ -265,7 +266,17 @@ class WebSocketSingleton {
         else if (data.type == MessageType.MOVE) {
             //TODO: validate move
             if (conn.GetPlayer()?.color != tableSession.state.playerToMove) return;
-            tableSession.moves.push(GetServerMove(data.data));
+            const move = GetServerMove(data.data);
+            if (!tableSession.state.legalMoves?.includes(move)) {
+                Reply({
+                    type: MessageType.CLIENT_ERROR,
+                    data: {
+                        errType:'ILLEGAL_MOVE'
+                    }
+                });
+                return;
+            }
+            tableSession.moves.push(move);
             tableSession.sfInterface.setPosition(tableSession.state.boardFen, tableSession.moves);
             tableSession.state.playerToMove = OtherColor(tableSession.state.playerToMove);
             if (await this.CheckForGameEnd(conn, tableSession)) return;
@@ -295,14 +306,14 @@ class WebSocketSingleton {
     }
 
     public async SendStateTo(color: PieceColor, tableSession: TableSession, socket: WebSocket) {
+        tableSession.state.legalMoves = await tableSession.sfInterface.getAllLegalMoves();
         let ans: MessageStateSync = {
             ...tableSession!.state,
             boardFen: await tableSession.sfInterface.getFen(),
-            legalMoves: await tableSession.sfInterface.getAllLegalMoves(),
             youAre: color,
             isInCheck: await tableSession.sfInterface.isInCheck(),
-            blackTime: tableSession.state.gameStartTimestamp ?  tableSession.state.maxTime! - (Date.now() - tableSession.state.gameStartTimestamp) : 0,
-            whiteTime: tableSession.state.gameStartTimestamp ?  tableSession.state.maxTime! - (Date.now() - tableSession.state.gameStartTimestamp) : 0
+            blackTime: tableSession.state.gameStartTimestamp ? tableSession.state.maxTime! - (Date.now() - tableSession.state.gameStartTimestamp) : 0,
+            whiteTime: tableSession.state.gameStartTimestamp ? tableSession.state.maxTime! - (Date.now() - tableSession.state.gameStartTimestamp) : 0
         }
         this.SendMessageTo(socket, {
             type: MessageType.SYNC,
@@ -331,7 +342,7 @@ class WebSocketSingleton {
                     winner: isInCheck ? OtherColor(tableSession.state.playerToMove) : null
                 }
             });
-            if(isInCheck)
+            if (isInCheck)
                 conn.CloseTable("Game concluded by checkmate", true);
             else
                 conn.CloseTable("Game concluded by stalemate", true);
@@ -353,7 +364,7 @@ class WebSocketSingleton {
         });
     }
 
-    public VerifyFen(fen: string, first : PieceColor): string | undefined {
+    public VerifyFen(fen: string, first: PieceColor): string | undefined {
         // Basic validation of FEN string
         const fenParts = fen.split(' ');
         if (fenParts.length !== 6) return "Invalid FEN format";

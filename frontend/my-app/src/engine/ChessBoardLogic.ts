@@ -197,7 +197,7 @@ export class ChessBoard {
 
     public MovePiece(piece: Piece, to: { file: number; rank: number }) {
         if (piece) {
-            if (!this.IsMoveLegal(piece, to)) return;
+            //if (!this.IsMoveLegal(piece, to)) return;
             if (!this.isEditMode)
                 ServerSync.Instance.SendMove({
                     from: Position.Position(piece), to: Position.Position(to.file, to.rank)

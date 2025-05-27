@@ -103,7 +103,7 @@ export type Message =
         data: string
     }
 
-export type ClientErrors = "INVALID_ID";
+export type ClientErrors = "INVALID_ID" | "ILLEGAL_MOVE";
 
 export type ServerPos = {
     file: string,

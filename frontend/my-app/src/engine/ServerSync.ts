@@ -435,6 +435,10 @@ export class ServerSync {
                     this.emit("surrender", undefined);
                     this.Quit("Game concluded as to request by remote host. Client is disconnecting...");
                     break;
+                case MessageType.CLIENT_ERROR:
+                    this.emit("onSystemChat",event.data.errType);
+                    this.RequestSync();
+                    break;
             }
             //TODO: buffer?
             return;
