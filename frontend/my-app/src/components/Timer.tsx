@@ -47,7 +47,8 @@ const Timer = ({ timeWhite, timeBlack, activeTimer }: { timeWhite: number, timeB
         const minutes = Math.floor(time / 60);
         const seconds = time % 60;
         const millis = (time_) % 1000;
-        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${millis.toString().padStart(3, '0')}`;
+        const millisShow = time < 60 ? `.${millis.toString().padStart(3,'0').slice(0,2)}` : "";
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}${millisShow}`;
     };
 
     return (

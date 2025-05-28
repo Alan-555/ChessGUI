@@ -2,10 +2,10 @@ import { Box, Button, Flex } from "@chakra-ui/react";
 import Timer from "./Timer";
 import MoveHistory from "./MoveHistory";
 import { useState } from "react";
-import { ChatMessage, GlobalBoard } from "../pages/Game";
+import { ChatMessage, GlobalBoard, Turn } from "../pages/Game";
 import Chat from "./Chat";
 
-const GameRightPanel = ({chat,sendChat,timer}:{chat:ChatMessage[],sendChat:(message : string)=>void, timer: {whiteTime:number, blackTime:number} | null}) => {
+const GameRightPanel = ({chat,sendChat,timer, moves}:{chat:ChatMessage[],moves : Turn[],sendChat:(message : string)=>void, timer: {whiteTime:number, blackTime:number} | null}) => {
 
     return (
         <Flex
@@ -13,9 +13,15 @@ const GameRightPanel = ({chat,sendChat,timer}:{chat:ChatMessage[],sendChat:(mess
             w={{ base: "90%", sm: "300px", md: "350px", lg: "400px" }}
             h="100%"
             px={4}
-            py={2}
-            gap={4} // space between vertical sections
             marginBottom={"0px"}
+            css={{
+                "& > *": {
+                    marginBottom: "16px",
+                },
+                "& > *:last-child": {
+                    marginBottom: 0,
+                },
+            }}
         >
             {/* Top section */}
             <Box maxHeight={"40vh"}  flex="1" bg="gray.100" borderRadius="md" p={4} boxShadow="sm">
@@ -34,19 +40,8 @@ const GameRightPanel = ({chat,sendChat,timer}:{chat:ChatMessage[],sendChat:(mess
 
             <Box height={"40vh"} flex="1" bg="gray.100" borderRadius="md" p={4} boxShadow="sm">
                 <MoveHistory moves={
-                    [
-                        { white: "e4", black: "e5" },
-                        { white: "Nf3", black: "Nc6" },
-                        { white: "Bb5", black: "a6" },
-                        { white: "Ba4", black: "Nf6" },
-                        { white: "O-O", black: "Be7" },
-                        { white: "O-O", black: "Be7" },
-                        { white: "O-O", black: "Be7" },
-                        { white: "O-O", black: "Be7" },
-                        { white: "O-O", black: "Be7" },
-                        { white: "O-O", black: "Be7" },
-                    ]
-                } onNext={() => { }} onPrevious={() => { }} showNavigationButtons={true} />
+                    moves
+                } onNext={() => { }} onPrevious={() => { }} showNavigationButtons={false} />
             </Box>
         </Flex>
     );

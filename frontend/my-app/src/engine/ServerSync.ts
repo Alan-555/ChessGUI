@@ -16,6 +16,7 @@ export enum MessageType {
 
     GAME_OVER, //server->client (game has concluded)
     GAME_RESIGN, //client->server (I resign)
+    GAME_DRAW_DECLARE, //client->server (I offer draw)
 
     REG_SEND, //client->server (I exist, acknowledge, please)
     REG_ACKNOWLEDGE, //server->client (Your existence has been acknowledged)
@@ -61,6 +62,7 @@ export type Message =
         data: {
             from: ServerPos,
             to: ServerPos
+            suffix?:string
         }
     }
     | {
@@ -101,6 +103,11 @@ export type Message =
         type: MessageType.INIT_HOST_WAIT,
         data: string
     }
+    | {
+        clientID: string
+        type: MessageType.GAME_DRAW_DECLARE,
+        data: null
+    }
 
 export type ClientErrors = "INVALID_ID";
 
@@ -128,6 +135,7 @@ export type MessageStateSync = {
     youAre: PieceColor;
     sfDifficulty?: number; //AI difficulty, if applicable
     isInCheck?: boolean; //if the player to move is in check
+    moves : string[]
 }
 
 type QueueRecord = {
@@ -318,6 +326,13 @@ export class ServerSync {
         this.Quit("Surrender event raised. Disconnecting...");
     }
 
+    public async Draw() {
+        await this.Send({
+            type: MessageType.GAME_DRAW_DECLARE,
+            data: null
+        });
+    }
+
     private async RegisterConnection() {
         return await this.Send({
             type: MessageType.REG_SEND,
@@ -336,7 +351,8 @@ export class ServerSync {
             boardFen: initCfg.startPosition,
             playerToMove: initCfg.onlineThisPlayer,
             youAre: initCfg.onlineThisPlayer,
-            sfDifficulty: initCfg.sfDifficulty
+            sfDifficulty: initCfg.sfDifficulty,
+            moves:[]
         }
         let gameId = (await this.Send({
             type: isAI ? MessageType.INIT_HOST_VS_AI_START : MessageType.INIT_HOST_START,
@@ -383,12 +399,13 @@ export class ServerSync {
 
 
 
-    public SendMove(move: Move): void {
+    public SendMove(move: Move,promotionSuffix? : string): void {
         this.Send({
             type: MessageType.MOVE,
             data: {
                 from: move.from.ToServerPos(),
-                to: move.to.ToServerPos()
+                to: move.to.ToServerPos(),
+                suffix:promotionSuffix
             }
         });
     }

@@ -95,6 +95,9 @@ type GlobalConfig = {
         preferredPlayerSide?: "BottomMe" | "BottomWhite";
         theme : string
     };
+    audio:{
+        doPlay: boolean
+    }
 };
 
 type GlobalConfigContextType = {
@@ -108,6 +111,9 @@ const defaultGlobalConfig: GlobalConfig = {
         preferredPlayerSide: "BottomMe",
         theme : Object.keys(BoardThemes)[0]
     },
+    audio:{
+        doPlay:true
+    }
 };
 
 export function GetRenderSize(){

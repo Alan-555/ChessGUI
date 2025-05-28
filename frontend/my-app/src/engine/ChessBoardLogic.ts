@@ -3,6 +3,7 @@ import { GetPieceSrc } from "../resources";
 import { GameConfig } from "../providers/GameConfigProvider";
 import { MessageStateSync, ServerPos, ServerSync } from "./ServerSync";
 import { number } from "framer-motion";
+import { Chess } from "chess.js";
 
 export enum PieceType {
     PAWN,
@@ -60,9 +61,9 @@ export class Position {
         }
     }
 
-    public ToServerPos(): ServerPos {
+    public ToServerPos(promotionSuffix? : string): ServerPos {
         return {
-            file: String.fromCharCode(this.file + "a".charCodeAt(0)),
+            file: String.fromCharCode(this.file + "a".charCodeAt(0))+(promotionSuffix||""),
             rank: 8 - this.rank
         }
     }
@@ -79,6 +80,8 @@ export type Move = {
     to: Position
 }
 
+
+
 export class ChessBoard {
     private board!: Square[][];
     public get Board(): Square[][] { return this.board; }
@@ -91,7 +94,8 @@ export class ChessBoard {
         this.InitBoard(fen);
     }
 
-    currentSync?: MessageStateSync;
+    public currentSync?: MessageStateSync;
+
 
     public SetNewSync(sync: MessageStateSync) {
         this.currentSync = sync;
@@ -195,13 +199,14 @@ export class ChessBoard {
 
     }
 
-    public MovePiece(piece: Piece, to: { file: number; rank: number }) {
+    public MovePiece(piece: Piece, to: { file: number; rank: number },suffix : string = "") {
         if (piece) {
-            //if (!this.IsMoveLegal(piece, to)) return;
+            if (!this.IsMoveLegal(piece, to)) return;
+            
             if (!this.isEditMode)
                 ServerSync.Instance.SendMove({
                     from: Position.Position(piece), to: Position.Position(to.file, to.rank)
-                });
+                }, suffix);
             if(this.currentSync)
                 this.currentSync.legalMoves = [];
 
@@ -218,16 +223,11 @@ export class ChessBoard {
         }
     }
 
-    public RequestMovePiece(piece: Piece, to: { file: number; rank: number }) {
-        if (this.IsMoveLegal(piece, to) === false)
-            return;
-        this.MovePiece(piece, to);
-    }
-
     public IsMoveLegal(piece: Piece, to: { file: number; rank: number }): boolean {
         if (this.isEditMode) return true;
         let moveStr = Position.Position(piece).ToServerPosString() + Position.Position(to.file, to.rank).ToServerPosString();
-        return this.currentSync?.legalMoves?.includes(moveStr) || false;
+        if (!this.currentSync?.legalMoves) return false;
+        return this.currentSync.legalMoves.some(s=>s.slice(0,4)===moveStr);
     }
 
     public GetLegalMoves(piece: Piece): Position[] {
@@ -329,3 +329,20 @@ export function IsFenValid(fen: string): boolean {
     return regex.test(fen) || regex.test(fen+" w - - 0 1");
 }
 
+export function GetMoveSAN(prevFen: string, newFen: string): string | null {
+    if(prevFen === newFen) return null;
+    const game = new Chess(prevFen);
+
+    const possibleMoves = game.moves({ verbose: true });
+
+    for (const move of possibleMoves) {
+        const testGame = new Chess();
+        testGame.load(prevFen);
+        testGame.move(move);
+        if (testGame.fen() === newFen) {
+            return game.move(move).san;
+        }
+    }
+
+    return null; // No matching move found
+}

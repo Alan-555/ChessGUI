@@ -1,4 +1,4 @@
-import { Box, Grid, Image } from "@chakra-ui/react";
+import { Box, Grid, Image, useBoolean } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { img_b_bishop, img_b_king, img_b_knight, img_b_pawn, img_b_queen, img_b_rook } from "../resources";
 import PieceDrag from "./PieceDrag";
@@ -8,6 +8,8 @@ import { useGameConfig } from "../providers/GameConfigProvider";
 import SetupPieceSpawner from "./SetupPieceSpawner";
 import { GlobalBoard } from "../pages/Game";
 import GameMessage from "./GameMessage";
+import { Overlay } from "./Overlay";
+import Promotion from "./Promotion";
 
 
 export type DragContext = {
@@ -27,10 +29,13 @@ export default function ChessBoardComponent() {
     //const board = useRef<ChessBoard>(GlobalBoard);
     const [version, setVersion] = useState(0);
     const globalCfg = useGlobalConfig();
+    
     const gameConfig = useGameConfig();
     const currentTheme = BoardThemes[globalCfg.config.render.theme];
-    
-    const board = {current:GlobalBoard};
+    const [selectPromotionPopup, setSelection] = useBoolean(false);
+    const [selectPromotionMove, setMove] = useState<{piece: Piece, to: { file: number; rank: number }}>()
+
+    const board = { current: GlobalBoard };
 
     const [dragContext, setDragContext_] = useState<DragContext>({
         isDragging: false,
@@ -50,6 +55,14 @@ export default function ChessBoardComponent() {
         }, 0);
     }
 
+    const movePiece = (piece: Piece, to: { file: number; rank: number }) => {
+        if (!GlobalBoard.isEditMode && piece.type === PieceType.PAWN && (to.rank === 0 || to.rank === 7) && GlobalBoard.IsMoveLegal(piece,to)) {
+            setMove({piece:piece,to:to});
+            setSelection.on();
+            return;
+        }
+        board.current.MovePiece(piece,to);
+    }
 
 
     const setDragContext = (newContext: DragContext, dropPos: { x: number, y: number }) => {
@@ -74,7 +87,7 @@ export default function ChessBoardComponent() {
                         if (dragContext.piece?.rank === rankI && dragContext.piece?.file === fileI) {
                             return;
                         }
-                        board.current.MovePiece(dragContext.piece!, { file: fileI, rank: rankI });
+                        movePiece(dragContext.piece!, { file: fileI, rank: rankI });
                         return;
                     }
                 }
@@ -85,7 +98,7 @@ export default function ChessBoardComponent() {
 
     }
     const setSelectContext = (newContext: SelectContext) => {
-        setSelectContext_(newContext); 
+        setSelectContext_(newContext);
 
     }
 
@@ -93,13 +106,13 @@ export default function ChessBoardComponent() {
         if (gameConfig?.GameMode == "BOARD_SETUP") return true;
         if (piece === null) return true;
         if (piece.color !== gameConfig?.onlineThisPlayer) return false;
-        if(GlobalBoard.currentSync?.playerToMove!=gameConfig.onlineThisPlayer)return false;
+        if (GlobalBoard.currentSync?.playerToMove != gameConfig.onlineThisPlayer) return false;
         return true;
     }
 
     const endSelectionMove = (rank: number, file: number) => {
         if (selectContext.square?.piece?.rank === rank && selectContext.square?.piece?.file === file) return;
-        board.current.MovePiece(selectContext.square!.piece!, { file: file, rank: rank });
+        movePiece(selectContext.square!.piece!, { file: file, rank: rank });
         setSelectContext({
             square: null,
             isSelected: false,
@@ -136,8 +149,11 @@ export default function ChessBoardComponent() {
     return (
         <>
             <Grid templateColumns={repeat} templateRows={repeat} gap={0}>
-                
+
                 <PieceDrag dragContext={dragContext} setDragContext={setDragContext} onTrueDrag={onTrueDrag}></PieceDrag>
+                <Overlay show={selectPromotionPopup} hideConfirm={true} >
+                    <Promotion color={selectPromotionMove?.piece.color} onSelect={e=>{GlobalBoard.MovePiece(selectPromotionMove!.piece,selectPromotionMove!.to,e); setSelection.off()}}></Promotion>
+                </Overlay>
                 {theBoard.map((row, rowIndex) =>
                     row.map((square, colIndex) => {
                         if (blackOnBottom && colIndex === 0) {
@@ -146,14 +162,14 @@ export default function ChessBoardComponent() {
                         const isDark = (rowIndex + colIndex) % 2 === 1;
                         let style = isDark ? currentTheme.darkSquareStyles : currentTheme.lightSquareStyles;
                         const isSelected = selectContext.isSelected && selectContext.square === square;
-                        if(isSelected)
-                            style = {...style,background: "rgb(100, 181, 246)"};
-                        if(square.inCheck&&square.piece){
-                            style = {...style,background: "red"};
+                        if (isSelected)
+                            style = { ...style, background: "rgb(100, 181, 246)" };
+                        if (square.inCheck && square.piece) {
+                            style = { ...style, background: "red" };
                         }
                         if (selectContext.square?.piece)
                             if (board.current.GetLegalMoves(selectContext.square?.piece).some(x => x.file === colIndex && x.rank === rowIndex)) {
-                                style = {...style,background: "green"};
+                                style = { ...style, background: "green" };
 
                             }
                         const pieceImg = square != null ? square.piece?.imgSrc : null;

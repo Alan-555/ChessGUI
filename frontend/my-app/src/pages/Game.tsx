@@ -2,22 +2,41 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import BackButton from "../components/BackButton";
 import Chat from "../components/Chat";
 import ChessBoardComponent from "../components/ChessBoard";
-import { GameConfig, GameConfigProvider } from "../providers/GameConfigProvider";
+import { GameConfig, GameConfigProvider, useGameConfig } from "../providers/GameConfigProvider";
 import Timer from "../components/Timer";
 import MoveHistory from "../components/MoveHistory";
 import Preferences from "./Prefs";
 import { Overlay } from "../components/Overlay";
 import GameRightPanel from "../components/GameRightPanel";
-import { ChessBoard, PieceColor } from "../engine/ChessBoardLogic";
+import { ChessBoard, GetMoveSAN, Move, PieceColor } from "../engine/ChessBoardLogic";
 import { GameOverData, GameOverReason, MessageStateSync, ServerSync } from "../engine/ServerSync";
 import GameMessage, { GameMessageProps } from "../components/GameMessage";
 import { useNavigate } from "react-router-dom";
+import { GameMessageOverlay } from "../components/GameMessageOverlay";
+import { GameLeaveButton } from "../components/GameLeave";
+import { Box } from "@chakra-ui/react";
+import useSound from "use-sound";
+import { aud_chat, aud_check, aud_move, aud_take } from "../resources";
+import { useGlobalConfig } from "../providers/GlobalConfigProvider";
 
 export const GlobalBoard: ChessBoard = new ChessBoard("SP");
+export type Turn = {
+  whiteMove: string,
+  blackMove: string
+}
+
 
 export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
 
   const nav = useNavigate();
+  const globalCfg = useGlobalConfig();
+  const playAud = globalCfg.config.audio.doPlay;
+  const playMove = new Audio(aud_move);
+  const playTake = new Audio(aud_take);
+  playTake.volume = 0.5;
+  const playCheck = new Audio(aud_check);
+  const playRadio = new Audio(aud_chat);
+  playRadio.volume = 0.1;
   const [gameMessage, setGameMessage] = useState<GameMessageProps>({
     show: false,
     buttonText: "",
@@ -27,8 +46,7 @@ export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
     },
     title: ""
   });
-  const [boardFen, setBoardFen] = useState<string>(gameConfig.startPosition);
-  const [showExitActions, setShowExitActions] = useState(false);
+  const [moves, setMoves] = useState<Turn[]>([]);
 
   const [gameTime, setGameTime] = useState<{ whiteTime: number, blackTime: number } | null>(gameConfig.time === undefined ? null : {
     blackTime: gameConfig.time,
@@ -60,6 +78,7 @@ export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
     }
     ServerSync.Instance.offAll("onClose");
     ServerSync.Instance.on("onClose", (e) => {
+      GlobalBoard.currentSync = undefined;
       setGameMessage({
         title: "Connection lost",
         message: "The server aborted connection. (" + (e.reason || e.code) + ")",
@@ -71,18 +90,47 @@ export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
       });
     });
     ServerSync.Instance.on<string>("onChat", (m) => {
+      if(playAud)
+        playRadio.play();
       setChat((prevMessages) => [...prevMessages, { name: "Opponent", message: m }]);
     });
     ServerSync.Instance.on<string>("onSystemChat", (m) => {
       setChat((prevMessages) => [...prevMessages, { name: "Server", message: m }]);
     });
     ServerSync.Instance.on<MessageStateSync>("onSync", (m) => {
+      const prevFen = GlobalBoard.currentSync?.boardFen || gameConfig.startPosition;
+      const newFen = m.boardFen;
+
+      const san = GetMoveSAN(prevFen, newFen);
+      if (san) {
+        if(playAud) playMove.play();
+        if (san.includes('x')&&playAud) playTake.play();
+        if (san.includes('+')&&playAud) playCheck.play();
+        setMoves((prevMoves) => {
+          if (prevMoves.length > 0 && prevMoves.slice(prevMoves.length - 1)[0].blackMove === "") {
+            let arr = prevMoves.slice(0, prevMoves.length - 1);
+            arr.push({
+              whiteMove: prevMoves.slice(prevMoves.length - 1)[0].whiteMove,
+              blackMove: san
+            });
+            return arr;
+          } else {
+            let arr = prevMoves.slice();
+            arr.push({ whiteMove: san, blackMove: "" });
+            return arr;
+          }
+        });
+
+      }
+      console.log("san: " + san);
+
+
       setGameTime({
         blackTime: m.blackTime,
         whiteTime: m.whiteTime
       });
-      console.log("Time "+gameTime);
-      
+      console.log("Time " + gameTime);
+
       GlobalBoard.InitBoard(m.boardFen);
       GlobalBoard.SetNewSync(m);
       ServerSync.Instance.on<GameOverData>("onGameOver", (e) => {
@@ -96,7 +144,7 @@ export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
           "GENERAL": "The game concluded for an unknown reason."
         };
         setGameMessage({
-          title: e.winner === gameConfig.onlineThisPlayer ? "You win!" : e.winner == null ? "Stalemate!" : "You lost!",
+          title: e.winner === gameConfig.onlineThisPlayer ? "You win!" : e.winner == null ? "Tie!" : "You lost!",
           message: messages[e.reason],
           buttonText: "To menu",
           onButtonClick() {
@@ -127,99 +175,26 @@ export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
 
   return (
     <div style={{ userSelect: "none", WebkitUserSelect: "none", msUserSelect: "none", display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-      <div style={{ position: 'absolute', top: '1rem', left: '1rem', zIndex: 1000 }}>
-        <button
-          onClick={() => setShowExitActions(true)}
-          style={{
-        background: '#e74c3c',
-        color: 'white',
-        border: 'none',
-        borderRadius: '4px',
-        padding: '0.5rem 1rem',
-        cursor: 'pointer',
-          }}
-        >
-          Exit Actions
-        </button>
-        {showExitActions && (
-            <div
-            style={{
-              position: 'absolute',
-              top: '2.5rem',
-              left: 0,
-              background: 'white',
-              border: '1px solid #ccc',
-              borderRadius: '6px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              padding: '1rem',
-              minWidth: '180px',
-              zIndex: 1100,
-            }}
-            >
-            <h4 style={{ margin: '0 0 1rem 0' }}>Choose Action</h4>
-            <button
-              onClick={() => {
-              ServerSync.Instance.Resign();
-              setGameMessage({
-                title: "You lost!",
-                message: "You have resigned the game.",
-                buttonText: "To menu",
-                onButtonClick() {
-                nav("/");
-                },
-                show: true,
-              });
-              setShowExitActions(false);
-              }}
-              style={{
-              background: '#e74c3c',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              padding: '0.5rem 1rem',
-              margin: '0.5rem 0',
-              width: '100%',
-              cursor: 'pointer',
-              }}
-            >
-              Resign
-            </button>
-            <button
-              onClick={() => {
-              //ServerSync.Instance.OfferDraw && ServerSync.Instance.OfferDraw();
-              setShowExitActions(false);
-              }}
-              style={{
-              background: '#3498db',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              padding: '0.5rem 1rem',
-              margin: '0.5rem 0',
-              width: '100%',
-              cursor: 'pointer',
-              }}
-            >
-              Offer Draw
-            </button>
-            <button
-              onClick={() => setShowExitActions(false)}
-              style={{
-              background: '#bdc3c7',
-              color: 'black',
-              border: 'none',
-              borderRadius: '4px',
-              padding: '0.5rem 1rem',
-              margin: '0.5rem 0 0 0',
-              width: '100%',
-              cursor: 'pointer',
-              }}
-            >
-              Cancel
-            </button>
-            </div>
-        )}
-      </div>
+      <Box
+        position={"absolute"}
+        top={"10px"}
+        left={"10px"}
+        zIndex={1000}
+      >
+
+        <GameLeaveButton onOfferDraw={() => { ServerSync.Instance.Draw() }} onResign={() => {
+          ServerSync.Instance.Resign();
+          setGameMessage({
+            title: "You lost!",
+            message: "You have resigned the game.",
+            buttonText: "To menu",
+            onButtonClick() {
+              nav("/");
+            },
+            show: true,
+          });
+        }} />
+      </Box>
       <button
         onClick={() => setShowPreferences(true)}
         style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 1000 }}
@@ -233,9 +208,13 @@ export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
       )}
       <GameConfigProvider value={gameConfig}>
 
-        <GameMessage {...gameMessage} />
-        <ChessBoardComponent />
-        <GameRightPanel timer={gameTime} chat={chat} sendChat={SendChatMessage} />
+        <div style={{ position: 'relative', display: 'inline-block' }}>
+          <ChessBoardComponent />
+          <GameMessageOverlay show={gameMessage.show}>
+            <GameMessage {...gameMessage} />
+          </GameMessageOverlay>
+        </div>
+        <GameRightPanel moves={moves} timer={gameTime} chat={chat} sendChat={SendChatMessage} />
       </GameConfigProvider>
     </div >
   );

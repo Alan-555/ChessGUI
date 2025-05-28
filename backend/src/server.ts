@@ -173,7 +173,7 @@ class WebSocketSingleton {
                     } as any
                 });
                 return;
-            }   
+            }
             const isAi = data.type == MessageType.INIT_HOST_VS_AI_START;
             const ts = new TableSession(data.data, { color: data.data.youAre, socket: socket }, isAi ? undefined : NewTableID(), (code) => { conn.CloseTable("A server error has occurred. Game terminated. (stockfish stop code " + code + ")", true); }, { color: OtherColor(data.data.youAre), socket: "NOT_PRESENT" });
             ts.state.playerToMove = data.data.boardFen.split(' ')[1].toLowerCase() == 'w' ? "white" : "black";
@@ -252,6 +252,7 @@ class WebSocketSingleton {
                     message: "Opponent connected!"
                 }
             });
+            await new Promise(resolve => setTimeout(resolve, 1000));
             this.HandleClock(table, conn, true);
             return;
 
@@ -268,7 +269,7 @@ class WebSocketSingleton {
         else if (data.type == MessageType.MOVE) {
             //TODO: validate move
             if (conn.GetPlayer()?.color != tableSession.state.playerToMove) return;
-            const move = GetServerMove(data.data);
+            const move = GetServerMove(data.data)+(data.data.suffix||"");
             if (!tableSession.state.legalMoves?.includes(move)) {
                 Reply({
                     type: MessageType.CLIENT_ERROR,
@@ -277,6 +278,17 @@ class WebSocketSingleton {
                     }
                 });
                 return;
+            }
+            if (tableSession.drawOffered) {
+                tableSession.drawOffered = undefined;
+                this.SendMessageTo(conn.GetOpponentSocket()!, {
+                    type: MessageType.CHAT,
+                    data: { message: "Draw has been rejected!", isServerMessage: true }
+                });
+                this.SendMessageTo(socket, {
+                    type: MessageType.CHAT,
+                    data: { message: "Draw has been rejected!", isServerMessage: true }
+                });
             }
             this.HandleClock(tableSession, conn);
             tableSession.moves.push(move);
@@ -308,6 +320,32 @@ class WebSocketSingleton {
                     data: { ...data.data, isServerMessage: false }
                 });
         }
+        else if (data.type == MessageType.GAME_DRAW_DECLARE) {
+            const offereeColor = conn.isHost ? tableSession.tableHost.color : tableSession.tableClient.color;
+            if (tableSession.drawOffered === offereeColor) return;
+            if (tableSession.tableClient.socket === "STOCKFISH") {
+                this.SendMessageTo(socket, {
+                    type: MessageType.CHAT,
+                    data: { message: "After Stockfish's long and thoughtful consideration, your draw request has been rejected!", isServerMessage: true }
+                });
+                return;
+            }
+            if (tableSession.drawOffered && tableSession.drawOffered != offereeColor) {
+                this.ConcludeGame("DRAW", "Game concluded in a draw", null, tableSession, conn);
+                return;
+            }
+            tableSession.drawOffered = conn.isHost ? tableSession.tableHost.color : tableSession.tableClient.color;
+            let enemySoc = conn.GetOpponentSocket();
+            if (enemySoc)
+                this.SendMessageTo(enemySoc, {
+                    type: MessageType.CHAT,
+                    data: { message: "Your opponent request a draw!", isServerMessage: true }
+                });
+            this.SendMessageTo(socket, {
+                type: MessageType.CHAT,
+                data: { message: "You offered to draw...", isServerMessage: true }
+            });
+        }
     }
 
     public async SendStateTo(color: PieceColor, tableSession: TableSession, socket: WebSocket) {
@@ -319,6 +357,7 @@ class WebSocketSingleton {
             isInCheck: await tableSession.sfInterface.isInCheck(),
             whiteTime: tableSession.state.whiteTime,
             blackTime: tableSession.state.blackTime,
+            moves: tableSession.moves
         }
         this.SendMessageTo(socket, {
             type: MessageType.SYNC,
@@ -327,7 +366,7 @@ class WebSocketSingleton {
     }
 
     public async HandleClock(tableSession: TableSession, conn: Connection, initial: boolean = false) {
-        if(!tableSession.state.useTime)return;
+        if (!tableSession.state.useTime) return;
         let playerToMove = tableSession.state.playerToMove;
         if (initial) playerToMove = OtherColor(playerToMove);
         const now = Date.now();

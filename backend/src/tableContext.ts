@@ -16,6 +16,8 @@ export class TableSession{
 
     public timeOutInterval : NodeJS.Timeout | undefined;
 
+    public drawOffered?: PieceColor;
+
     constructor(state : MessageStateSync, player : Player,gameID : string | undefined, onClose:(code:number|null)=>void,opponent? : Player){
         this.sfInterface = new StockfishInterface(Config.stockfishPath,onClose);
         this.state = state;

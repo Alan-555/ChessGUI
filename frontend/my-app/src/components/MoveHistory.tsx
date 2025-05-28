@@ -1,7 +1,8 @@
 import React from 'react';
+import { Turn } from '../pages/Game';
 
 interface MoveHistoryProps {
-    moves: { white: string; black?: string }[];
+    moves: Turn[];
     showNavigationButtons?: boolean;
     onPrevious?: () => void;
     onNext?: () => void;
@@ -14,62 +15,50 @@ const MoveHistory: React.FC<MoveHistoryProps> = ({
     onNext,
 }) => {
     return (
-        <div style={{ padding: '16px', fontFamily: 'Arial, sans-serif' }}>
-            <div
+        <div
             style={{
-                maxHeight: '300px',
-                overflowY: 'auto',
+                height: '100%',
+                overflowY: 'scroll',
                 border: '1px solid #ccc',
                 borderRadius: '8px',
                 padding: '8px',
             }}
-            >
+        >
             {moves.map((move, index) => (
                 <div
-                key={index}
-                style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginBottom: '8px',
-                }}
-                >
-                       {index + 1}.
-                <div
+                    key={index}
                     style={{
-                    padding: '8px 12px',
-                    borderRadius: '12px',
-                    backgroundColor: '#f0f0f0',
-                    marginRight: '8px',
-                    flex: 1,
-                    textAlign: 'center',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        marginBottom: '8px',
                     }}
                 >
-                    {move.white}
-                </div>
-                <div
-                    style={{
-                    padding: '8px 12px',
-                    borderRadius: '12px',
-                    backgroundColor: '#f0f0f0',
-                    flex: 1,
-                    textAlign: 'center',
-                    }}
-                >
-                    {move.black || ''}
-                </div>
+                    {index + 1}.
+                    <div
+                        style={{
+                            padding: '8px 12px',
+                            borderRadius: '12px',
+                            backgroundColor: '#f0f0f0',
+                            marginRight: '8px',
+                            flex: 1,
+                            textAlign: 'center',
+                        }}
+                    >
+                        {move.whiteMove}
+                    </div>
+                    <div
+                        style={{
+                            padding: '8px 12px',
+                            borderRadius: '12px',
+                            backgroundColor: '#f0f0f0',
+                            flex: 1,
+                            textAlign: 'center',
+                        }}
+                    >
+                        {move.blackMove || ''}
+                    </div>
                 </div>
             ))}
-            </div>
-            {showNavigationButtons && (
-            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between' }}>
-                <button onClick={onPrevious} style={{ padding: '8px 16px' }}>
-                Previous
-                </button>
-                <button onClick={onNext} style={{ padding: '8px 16px' }}>
-                Next
-                </button>
-            </div>
-            )}
         </div>
     );
 };

@@ -12,6 +12,7 @@ export enum MessageType {
 
     GAME_OVER, //server->client (game has concluded)
     GAME_RESIGN, //client->server (I resign)
+    GAME_DRAW_DECLARE, //client->server (I offer draw)
 
     REG_SEND, //client->server (I exist, acknowledge, please)
     REG_ACKNOWLEDGE, //server->client (Your existence has been acknowledged)
@@ -56,7 +57,8 @@ export type Message =
         type: MessageType.MOVE,
         data: {
             from: ServerPos,
-            to: ServerPos
+            to: ServerPos,
+            suffix?:string
         }
     }
     | {
@@ -102,6 +104,11 @@ export type Message =
         type: MessageType.INIT_HOST_WAIT,
         data: string
     }
+    | {
+        clientID: string,
+        type: MessageType.GAME_DRAW_DECLARE,
+        data:null
+    }
 
 export type ClientErrors = "INVALID_ID" | "ILLEGAL_MOVE";
 
@@ -130,6 +137,7 @@ export type MessageStateSync = {
     youAre: PieceColor;
     sfDifficulty?: number; //AI difficulty, if applicable
     isInCheck?: boolean; //if the player to move is in check
+    moves : string[]
 
     //server-side only
     useTime?: boolean,

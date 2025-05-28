@@ -27,19 +27,25 @@ import { BoardThemes, Themes, useGlobalConfig } from "../providers/GlobalConfigP
     const [scaling, setScaling] = useState(!globalCfg.config.render.imgSize);
     const [customScaling, setCustomScaling] = useState(globalCfg.config.render.imgSize ? globalCfg.config.render.imgSize : 50 );
     const [boardTheme, setBoardTheme] = useState(globalCfg.config.render.theme);
-    const [soundEnabled, setSoundEnabled] = useState(true);
+    const [soundEnabled, setSoundEnabled] = useState(globalCfg.config.audio.doPlay);
   
     const savePreferences = () => {
+      console.log("SETTING FUCKING PREFS TO "+soundEnabled);
+      
       globalCfg.setConfig({
         render:{
           imgSize: scaling ? undefined : customScaling,
           preferredPlayerSide : orientation,
           theme: boardTheme
+        },
+        audio:{
+          doPlay:soundEnabled
         }
       });
+      console.log("SETTING FUCKING PREFS TO "+globalCfg.config);
     };
 
-    useEffect(()=>savePreferences(), [orientation,scaling,customScaling,boardTheme]);
+    useEffect(()=>savePreferences(), [orientation,scaling,customScaling,boardTheme,soundEnabled]);
     
   
     return (
@@ -122,7 +128,7 @@ import { BoardThemes, Themes, useGlobalConfig } from "../providers/GlobalConfigP
             <FormLabel mb="0">Enable Sounds</FormLabel>
             <Switch
               isChecked={soundEnabled}
-              onChange={() => setSoundEnabled(!soundEnabled)}
+              onChange={(e) => setSoundEnabled((e.target).checked)}
             />
           </FormControl>
   

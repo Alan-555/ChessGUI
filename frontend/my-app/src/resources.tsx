@@ -10,6 +10,10 @@ import img_w_knight from './resources/knight-w.svg';
 import img_w_pawn from './resources/pawn-w.svg';
 import img_w_queen from './resources/queen-w.svg';
 import img_w_rook from './resources/rook-w.svg';
+import aud_take from './resources/take.wav';
+import aud_check from './resources/check.wav';
+import aud_move from './resources/move.wav';
+import aud_chat from './resources/chat.wav';
 import { PieceColor, PieceType } from './engine/ChessBoardLogic';
 
 export {
@@ -26,6 +30,13 @@ export {
     img_w_queen,
     img_w_rook
 };
+
+export{
+    aud_take,
+    aud_check,
+    aud_move,
+    aud_chat
+}
 
 export function GetPieceSrc(color_ : PieceColor, type : PieceType) {
     if(color_ === "white") {
