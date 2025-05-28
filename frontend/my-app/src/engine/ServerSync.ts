@@ -325,7 +325,7 @@ export class ServerSync {
         }, MessageType.REG_ACKNOWLEDGE);
     }
 
-    public async InitGameAsHost(initCfg: GameConfig, isAI?: boolean, setStatus?: (m: string) => Promise<void>) {
+    public async InitGameAsHost(initCfg: GameConfig, isAI?: boolean, setStatus?: (m: string, code? : string) => Promise<void>) {
         if (!setStatus) setStatus = async (s) => { };
         await this.RegisterConnection();
         await setStatus("Logged in. Sending config...");
@@ -347,7 +347,7 @@ export class ServerSync {
             await setStatus("Game ready. Running initial sync...");
             return;
         }
-        await setStatus("Table created with id" + gameId + ". Waiting for an opponent to join...");
+        await setStatus("Game created! Waiting for an opponent to join... (send them the code!)",gameId?.toString());
 
         await this.WaitForMessage(MessageType.INIT_GO);
 

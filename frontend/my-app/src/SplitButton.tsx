@@ -34,8 +34,9 @@ export default function SplitButton() {
                 position="relative"
                 width="100%"
                 height="100%"
-                onMouseEnter={() => setHovered(true)}
+                onMouseMove={() => setHovered(true)}
                 onMouseLeave={() => setHovered(false)}
+                onMouseDown={() => setHovered(true)}
             >
                 {/* Initial Button */}
                 <Button
@@ -84,9 +85,9 @@ export default function SplitButton() {
                             <Input
                                 placeholder="Enter game code"
                                 onChange={(e) => {
-                                    setGameId(e.target.value);
+                                    setGameId(e.target.value.slice(0,4));
                                 }}
-                                max={9999}
+                                inputMode="numeric"
                                 autoFocus
                                 type="number"
                                 value={gameId}
@@ -98,7 +99,7 @@ export default function SplitButton() {
                             <Button
                                 className="button"
                                 width="100%"
-                                height="7vh"
+                                
                                 fontSize="lg"
                                 colorScheme="teal"
                                 onClick={() => {
@@ -108,7 +109,7 @@ export default function SplitButton() {
                             >
                                 Join
                             </Button>
-                            <Button className="button" width="100%" height="7vh" fontSize="lg" onClick={() => {
+                            <Button className="button" width="100%"  fontSize="lg" onClick={() => {
                                 setJoinGameScreen(false);
 
                             }}>

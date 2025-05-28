@@ -17,8 +17,12 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ config, abort }) => {
 
     const initStart = useRef(false);
     const [loadText, setLoadText_] = useState("Establishing connection...");
+    const [codeText, setCodeText] = useState("");
 
-    let setLoadText = async (m: string) => {
+    let setLoadText = async (m: string, code? : string) => {
+        
+        if(code)
+            setCodeText(code);
         setLoadText_(m);
         await new Promise(resolve => setTimeout(resolve, 150));
     }
@@ -66,7 +70,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ config, abort }) => {
 
                 }
                 else if (config.GameMode === "PLAY_LOCAL_AI") {
-                    await ServerSync.Instance.InitGameAsHost(config, true);
+                    await ServerSync.Instance.InitGameAsHost(config, true, setLoadText);
                     console.log("Server GO signal received. Ready to play!");
                     GlobalBoard.InitBoard(config.startPosition)
                     nav("/play", { state: config });
@@ -90,8 +94,9 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ config, abort }) => {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            height: '100vh',
-            background: '#f5f5f5'
+            minHeight: '20vh',
+            background: '#f5f5f5',
+            width:"50vw"
         }}>
             <div className="loader" style={{
                 border: '8px solid #f3f3f3',
@@ -102,6 +107,24 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ config, abort }) => {
                 animation: 'spin 1s linear infinite'
             }} />
             <h2>{loadText}.</h2>
+            <p  onMouseDown={
+                ()=>{
+                    console.log("TETETTET");
+                    
+                    navigator.clipboard.writeText(codeText);
+                    toast({
+                        title: "Copied to clipboard",
+                        description: codeText ? `Code "${codeText}" copied.` : "No code to copy.",
+                        status: "success",
+                        duration: 1000,
+                        isClosable: true,
+                    });
+                }
+            }
+            style={{ fontSize: "3em", color: "rgb(3, 63, 147)", cursor: "pointer" }}
+            title={codeText ? "Click to copy code" : ""}
+        >
+            {codeText}</p>
             <style>
                 {`
                     @keyframes spin {

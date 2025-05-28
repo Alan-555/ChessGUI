@@ -7,7 +7,7 @@ import { GlobalBoard } from "./Game";
 
 export default function GameRaw({gameConfig}:{gameConfig: GameConfig}) {
   return (
-    <div style={{ userSelect:"none", WebkitUserSelect:"none", msUserSelect:"none", display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+    <div style={{ userSelect:"none", WebkitUserSelect:"none", msUserSelect:"none", display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '70px'}}>
       <GameConfigProvider value={gameConfig}>
         <ChessBoardComponent/>
       </GameConfigProvider>

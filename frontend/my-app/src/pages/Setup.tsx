@@ -32,6 +32,7 @@ import GameRaw from './GameRaw';
 import { useGlobalConfig } from '../providers/GlobalConfigProvider';
 import { number } from 'framer-motion';
 import LoadingScreen from '../components/ConnectToServer';
+import { ServerSync } from '../engine/ServerSync';
 
 
 
@@ -225,7 +226,7 @@ function ChessSetup({ mode }: { mode: GameMode }) {
             }}>
                 <GameRaw gameConfig={setupBoardCfg} />
             </Overlay>
-            <Overlay show={isLoad} hideConfirm={true}>
+            <Overlay buttonText='Cancel'  show={isLoad} hideConfirm={false} onClose={()=>{startLoad(false); ServerSync.Instance.Quit("User aborted connection")}}>
                 <LoadingScreen config={config}
                     abort={
                         (t, d) => {

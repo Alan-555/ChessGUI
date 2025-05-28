@@ -173,7 +173,7 @@ class WebSocketSingleton {
                     } as any
                 });
                 return;
-            }
+            }   
             const isAi = data.type == MessageType.INIT_HOST_VS_AI_START;
             const ts = new TableSession(data.data, { color: data.data.youAre, socket: socket }, isAi ? undefined : NewTableID(), (code) => { conn.CloseTable("A server error has occurred. Game terminated. (stockfish stop code " + code + ")", true); }, { color: OtherColor(data.data.youAre), socket: "NOT_PRESENT" });
             ts.state.playerToMove = data.data.boardFen.split(' ')[1].toLowerCase() == 'w' ? "white" : "black";
