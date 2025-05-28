@@ -36,19 +36,20 @@ export const Overlay = ({ onClose, show, children, styles, hideConfirm }: { onCl
               style={styles}
             >
               {children}
-              {!hideConfirm && (
 
-                <Button
-                  mt={4}
-                  onClick={onClose}
-                  marginTop="-10%"
-                  colorScheme="teal"
-                  width={"100%"}
-                >
-                  Confirm
-                </Button>
-              )}
             </MotionBox>
+            {!hideConfirm && (
+
+              <Button
+                mt={4}
+                onClick={onClose}
+                marginTop="-10%"
+                colorScheme="teal"
+                width={"100%"}
+              >
+                Confirm
+              </Button>
+            )}
           </MotionBox>
         </Portal>
       )}

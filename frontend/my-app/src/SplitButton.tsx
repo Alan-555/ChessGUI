@@ -78,24 +78,15 @@ export default function SplitButton() {
                 </HStack>
                 <Overlay hideConfirm={true} show={joinGameScreen} onClose={() => setJoinGameScreen(false)}>
 
-                    <Box
-                        backgroundColor="white"
-                        padding="20px"
-                        borderRadius="8px"
-                        height={"20vh"}
-                        boxShadow="lg"
-                        width={{ base: "90%", sm: "400px" }}
-                        textAlign="center"
-                    >
                         {/* Join Game Form */}
-                        <Stack spacing={4}>
+                        <Stack spacing={4} w="40vw" maxW={"500px"}>
 
                             <Input
                                 placeholder="Enter game code"
                                 onChange={(e) => {
                                     setGameId(e.target.value);
                                 }}
-                                maxLength={4}
+                                max={9999}
                                 autoFocus
                                 type="number"
                                 value={gameId}
@@ -107,7 +98,7 @@ export default function SplitButton() {
                             <Button
                                 className="button"
                                 width="100%"
-                                height="5vh"
+                                height="7vh"
                                 fontSize="lg"
                                 colorScheme="teal"
                                 onClick={() => {
@@ -117,14 +108,13 @@ export default function SplitButton() {
                             >
                                 Join
                             </Button>
-                            <Button className="button" width="100%" height="5vh" fontSize="lg" onClick={() => {
+                            <Button className="button" width="100%" height="7vh" fontSize="lg" onClick={() => {
                                 setJoinGameScreen(false);
 
                             }}>
                                 Cancel
                             </Button>
                         </Stack>
-                    </Box>
                 </Overlay>
                 <Overlay show={isLoading} hideConfirm={true}>
                     <LoadingScreen config={{
