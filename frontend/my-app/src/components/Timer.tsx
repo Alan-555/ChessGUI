@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PieceColor } from '../engine/ChessBoardLogic';
 import { useGlobalConfig } from '../providers/GlobalConfigProvider';
 import { useGameConfig } from '../providers/GameConfigProvider';
+import { ServerSync } from '../engine/ServerSync';
 
 const Timer = ({ timeWhite, timeBlack, activeTimer }: { timeWhite: number, timeBlack: number, activeTimer: PieceColor | undefined }) => {
     const config = useGlobalConfig();
@@ -10,24 +11,43 @@ const Timer = ({ timeWhite, timeBlack, activeTimer }: { timeWhite: number, timeB
 
     const [topTime, setTopTime] = useState(bottomColor === "black" ? timeWhite : timeBlack);
     const [bottomTime, setBottomTime] = useState(bottomColor === "black" ? timeBlack : timeWhite);
+    const [topSyncTime, setTopSyncTime] = useState(bottomColor === "black" ? timeWhite : timeBlack);
+    const [bottomSyncTime, setBottomSyncTime] = useState(bottomColor === "black" ? timeBlack : timeWhite);
+    const [syncStartTimeStamp, setSyncStartTimeStamp] = useState(Date.now());
+
+
+    useEffect(() => {
+        setTopSyncTime(bottomColor === "white" ? timeBlack : timeWhite);
+        setBottomSyncTime(bottomColor === "white" ? timeWhite : timeBlack);
+        setSyncStartTimeStamp(Date.now());
+    }, [bottomColor, timeBlack, timeWhite]);
+
 
     useEffect(() => {
         const interval = setInterval(() => {
-            if (activeTimer === bottomColor)
-                setBottomTime((prev) => prev - 1);
-            else if(activeTimer !== undefined)
-                setTopTime((prev) => prev - 1);
-        }, 1000);
+            if (activeTimer === bottomColor && ServerSync.Instance.IsConnected)
+                setBottomTime(() => {
+                    const elapsed = Date.now() - syncStartTimeStamp;
+                    return bottomSyncTime - elapsed;
+                });
+            else if (activeTimer !== undefined && ServerSync.Instance.IsConnected)
+                setTopTime(() => {
+                    const elapsed = Date.now() - syncStartTimeStamp;
+                    return topSyncTime - elapsed;
+                });
+        }, 10);
 
         return () => clearInterval(interval);
-    }, []);
+    }, [activeTimer, bottomColor, bottomTime, bottomSyncTime, topTime, topSyncTime]);
 
-    const formatTime = (time: number) => {
-        time = time/1000; // Convert milliseconds to seconds
+    const formatTime = (time_: number) => {
+        time_ = Math.max(0,time_);
+        let time = time_ / 1000; // Convert milliseconds to seconds
         time = Math.floor(time);
         const minutes = Math.floor(time / 60);
         const seconds = time % 60;
-        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        const millis = (time_) % 1000;
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${millis.toString().padStart(3, '0')}`;
     };
 
     return (

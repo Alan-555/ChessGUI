@@ -1,6 +1,6 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import Config from './app';
-import { GetServerMove, Message, MessageStateSync, MessageType, OtherColor, PieceColor } from './protocolTypes';
+import { GameOverReason, GetServerMove, Message, MessageStateSync, MessageType, OtherColor, PieceColor } from './protocolTypes';
 import { StockfishInterface } from './sf';
 import { TableSession } from './tableContext';
 
@@ -195,12 +195,13 @@ class WebSocketSingleton {
                     data: null
                 });
                 if (ts.state.playerToMove == ts.tableClient.color) {
-                    const move = await ts.sfInterface.getBestMove();
+                    const move = await ts.sfInterface.getBestMove(ts.state.whiteTime, ts.state.blackTime);
                     ts.moves.push(move);
                     ts.sfInterface.setPosition(ts.state.boardFen, ts.moves);
                     ts.state.playerToMove = OtherColor(ts.state.playerToMove);
                     this.SendStateTo(conn.GetPlayer()!.color, ts, socket);
                 }
+                this.HandleClock(ts, conn, true);
             }
 
             return;
@@ -251,6 +252,7 @@ class WebSocketSingleton {
                     message: "Opponent connected!"
                 }
             });
+            this.HandleClock(table, conn, true);
             return;
 
 
@@ -271,19 +273,22 @@ class WebSocketSingleton {
                 Reply({
                     type: MessageType.CLIENT_ERROR,
                     data: {
-                        errType:'ILLEGAL_MOVE'
+                        errType: 'ILLEGAL_MOVE'
                     }
                 });
                 return;
             }
+            this.HandleClock(tableSession, conn);
             tableSession.moves.push(move);
             tableSession.sfInterface.setPosition(tableSession.state.boardFen, tableSession.moves);
             tableSession.state.playerToMove = OtherColor(tableSession.state.playerToMove);
             if (await this.CheckForGameEnd(conn, tableSession)) return;
             if (tableSession.tableClient.socket == "STOCKFISH") {
-                const move = await tableSession.sfInterface.getBestMove();
+                await this.SendStateTo(conn.GetPlayer()!.color, tableSession, socket);
+                const move = await tableSession.sfInterface.getBestMove(tableSession.state.whiteTime, tableSession.state.blackTime);
                 tableSession.moves.push(move);
                 tableSession.sfInterface.setPosition(tableSession.state.boardFen, tableSession.moves);
+                this.HandleClock(tableSession, conn);
                 tableSession.state.playerToMove = OtherColor(tableSession.state.playerToMove);
                 await this.SendStateTo(conn.GetPlayer()!.color, tableSession, socket);
                 await this.CheckForGameEnd(conn, tableSession);
@@ -312,13 +317,40 @@ class WebSocketSingleton {
             boardFen: await tableSession.sfInterface.getFen(),
             youAre: color,
             isInCheck: await tableSession.sfInterface.isInCheck(),
-            blackTime: tableSession.state.gameStartTimestamp ? tableSession.state.maxTime! - (Date.now() - tableSession.state.gameStartTimestamp) : 0,
-            whiteTime: tableSession.state.gameStartTimestamp ? tableSession.state.maxTime! - (Date.now() - tableSession.state.gameStartTimestamp) : 0
+            whiteTime: tableSession.state.whiteTime,
+            blackTime: tableSession.state.blackTime,
         }
         this.SendMessageTo(socket, {
             type: MessageType.SYNC,
             data: ans
         })
+    }
+
+    public async HandleClock(tableSession: TableSession, conn: Connection, initial: boolean = false) {
+        if(!tableSession.state.useTime)return;
+        let playerToMove = tableSession.state.playerToMove;
+        if (initial) playerToMove = OtherColor(playerToMove);
+        const now = Date.now();
+        if (tableSession.timeOutInterval) {
+            clearTimeout(tableSession.timeOutInterval);
+        }
+        if (playerToMove == "white") {
+            if (!initial)
+                tableSession.state.whiteTime -= now - tableSession.state.whiteStartTimestamp!;
+            tableSession.state.blackStartTimestamp = now;
+            tableSession.timeOutInterval = setTimeout(() => {
+                this.ConcludeGame("TIME_OUT", "Time out for black player", 'white', tableSession, conn);
+            }, tableSession.state.blackTime);
+        }
+        else {
+            if (!initial)
+                tableSession.state.blackTime -= now - tableSession.state.blackStartTimestamp!;
+            tableSession.state.whiteStartTimestamp = now;
+            tableSession.timeOutInterval = setTimeout(() => {
+                this.ConcludeGame("TIME_OUT", "Time out for white player", 'black', tableSession, conn);
+            }, tableSession.state.whiteTime);
+        }
+
     }
 
 
@@ -328,27 +360,30 @@ class WebSocketSingleton {
         if (legalMoves!.length == 0) {
             //playerToMove is checkmated
             const reason = isInCheck ? "CHECKMATE" : "STALEMATE";
-            this.SendMessageTo(tableSession.tableClient.socket, {
-                type: MessageType.GAME_OVER,
-                data: {
-                    reason: reason,
-                    winner: isInCheck ? OtherColor(tableSession.state.playerToMove) : null
-                }
-            });
-            this.SendMessageTo(tableSession.tableHost.socket, {
-                type: MessageType.GAME_OVER,
-                data: {
-                    reason: reason,
-                    winner: isInCheck ? OtherColor(tableSession.state.playerToMove) : null
-                }
-            });
-            if (isInCheck)
-                conn.CloseTable("Game concluded by checkmate", true);
-            else
-                conn.CloseTable("Game concluded by stalemate", true);
+            const winner = isInCheck ? OtherColor(tableSession.state.playerToMove) : null;
+            const reasonString = isInCheck ? "Game concluded by checkmate" : "Game concluded by stalemate";
+            this.ConcludeGame(reason, reasonString, winner, tableSession, conn);
             return true;
         }
         return false;
+    }
+
+    public ConcludeGame(reason: GameOverReason, reasonString: string, winner: PieceColor | null, tableSession: TableSession, conn: Connection) {
+        this.SendMessageTo(tableSession.tableClient.socket, {
+            type: MessageType.GAME_OVER,
+            data: {
+                reason: reason,
+                winner: winner
+            }
+        });
+        this.SendMessageTo(tableSession.tableHost.socket, {
+            type: MessageType.GAME_OVER,
+            data: {
+                reason: reason,
+                winner: winner
+            }
+        });
+        conn.CloseTable(reasonString, true);
     }
 
     public SendMessageTo(socket: WebSocket | string, message: Omit<Message, "clientID">) {

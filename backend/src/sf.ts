@@ -40,6 +40,9 @@ class AsyncProcessCommunicator {
     }
 
     sendCommand(command: string, handle?: Predicate<string>): Promise<string> {
+        if (process.stdin.readableEnded || process.stdin.destroyed) {
+            return Promise.reject(new Error("Process stdin is closed"));
+        }
         return new Promise(async (resolve, reject) => {
             //wait for empty queue
             if (this.queue.length != 0)
@@ -48,7 +51,12 @@ class AsyncProcessCommunicator {
                 });
             if (handle)
                 this.queue.push({ command, resolve, reject, handle: handle, buffer: "" , id: Math.round(Math.random()*100).toString()});
-            this.process.stdin.write(command + '\n');
+            try{
+                this.process.stdin.write(command + '\n');
+            }
+            catch{
+                console.log("Writing to stdin after closure!");
+            }
             if (!handle)
                 resolve("");
         });
@@ -105,8 +113,10 @@ class StockfishInterface {
         throw new Error('Check status not found in output');
     }
     
-    async getBestMove(): Promise<string> {
-        const output = await this.communicator.sendCommand('go movetime 1000',  (buffer) => {
+    async getBestMove(wTime : number, bTime : number): Promise<string> {
+        wTime = Math.min(1000*60*5,wTime);
+        bTime = Math.min(1000*60*5,bTime);
+        const output = await this.communicator.sendCommand('go wtime '+wTime+' btime '+bTime,  (buffer) => {
             const bestMoveLine = buffer.split(/\r?\n/).find((line) => line.startsWith('bestmove'));
             if (bestMoveLine) {
                 return true;

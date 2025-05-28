@@ -14,6 +14,8 @@ export class TableSession{
 
     public gameID? : string;
 
+    public timeOutInterval : NodeJS.Timeout | undefined;
+
     constructor(state : MessageStateSync, player : Player,gameID : string | undefined, onClose:(code:number|null)=>void,opponent? : Player){
         this.sfInterface = new StockfishInterface(Config.stockfishPath,onClose);
         this.state = state;
@@ -25,15 +27,18 @@ export class TableSession{
         this.tableClient = opponent ? opponent : {color:player.color=='white' ? 'black' : 'white', socket : 'NOT_PRESENT'};
 
         if(this.state.whiteTime!=0){
-            this.state.gameStartTimestamp = Date.now();
-            this.state.maxTime = this.state.whiteTime;
-            this.state.whiteTime = 0;
-            this.state.blackTime = 0;
+            this.state.useTime = true;
+            this.state.blackStartTimestamp = Date.now();
+            this.state.whiteStartTimestamp = Date.now();
+            const maxTime = this.state.whiteTime;
+            this.state.whiteTime = maxTime;
+            this.state.blackTime = maxTime;
         }
     }
 
     dispose(){
         this.sfInterface.close();
+        if(this.timeOutInterval) clearTimeout(this.timeOutInterval);
     }
 
     getSocketByColor(color: PieceColor): WebSocket | undefined {

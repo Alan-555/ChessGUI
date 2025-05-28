@@ -71,6 +71,9 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ config, abort }) => {
                     GlobalBoard.InitBoard(config.startPosition)
                     nav("/play", { state: config });
                 }
+                else if(config.GameMode === "PLAY_LOCAL_HUMAN"){
+                    abort("Unimplemented game mode.", "The selected game mode has not been implemented yet in this version.");
+                }
                 else {
                     abort("Invalid game mode.", "The selected game mode is not supported.");
                 }
