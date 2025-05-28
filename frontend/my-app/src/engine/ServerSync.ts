@@ -117,7 +117,7 @@ export type GameOverData = {
     reason: GameOverReason,
     winner: PieceColor | null;
 }
-export type GameOverReason = "CHECKMATE" | "STALEMATE" | "SURRENDER" | "CONN_ERROR" | "GENERAL" | "TIMEOUT" | "DRAW";
+export type GameOverReason = "CHECKMATE" | "STALEMATE" | "SURRENDER" | "CONN_ERROR" | "GENERAL" | "TIME_OUT" | "DRAW";
 
 export type MessageStateSync = {
     boardFen: string;

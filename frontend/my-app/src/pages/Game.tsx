@@ -28,6 +28,7 @@ export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
     title: ""
   });
   const [boardFen, setBoardFen] = useState<string>(gameConfig.startPosition);
+  const [showExitActions, setShowExitActions] = useState(false);
 
   const [gameTime, setGameTime] = useState<{ whiteTime: number, blackTime: number } | null>(gameConfig.time === undefined ? null : {
     blackTime: gameConfig.time,
@@ -76,11 +77,12 @@ export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
       setChat((prevMessages) => [...prevMessages, { name: "Server", message: m }]);
     });
     ServerSync.Instance.on<MessageStateSync>("onSync", (m) => {
-      if (gameTime)
-        setGameTime({
-          blackTime: m.blackTime,
-          whiteTime: m.whiteTime
-        });
+      setGameTime({
+        blackTime: m.blackTime,
+        whiteTime: m.whiteTime
+      });
+      console.log("Time "+gameTime);
+      
       GlobalBoard.InitBoard(m.boardFen);
       GlobalBoard.SetNewSync(m);
       ServerSync.Instance.on<GameOverData>("onGameOver", (e) => {
@@ -88,13 +90,13 @@ export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
           "CHECKMATE": "The game concluded in a checkmate.",
           "STALEMATE": "The game concluded in a stalemate.",
           "DRAW": "The game concluded in a draw.",
-          "TIMEOUT": "The game concluded in a timeout.",
+          "TIME_OUT": "The game concluded in a timeout.",
           "CONN_ERROR": "The game concluded due to a connection error.",
           "SURRENDER": "The game concluded because you surrendered.",
           "GENERAL": "The game concluded for an unknown reason."
         };
         setGameMessage({
-          title: e.winner === gameConfig.onlineThisPlayer ? "You win!" : e.winner==null ? "Stalemate!" : "You lost!",
+          title: e.winner === gameConfig.onlineThisPlayer ? "You win!" : e.winner == null ? "Stalemate!" : "You lost!",
           message: messages[e.reason],
           buttonText: "To menu",
           onButtonClick() {
@@ -125,34 +127,99 @@ export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
 
   return (
     <div style={{ userSelect: "none", WebkitUserSelect: "none", msUserSelect: "none", display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-      <button
-        onClick={() => {
-          ServerSync.Instance.Resign();
-          setGameMessage({
-            title: "You lost!",
-            message: "You have resigned the game.",
-            buttonText: "To menu",
-            onButtonClick() {
-              nav("/");
-            },
-            show: true,
-          });
-        }}
-        style={{
-          position: 'absolute',
-          top: '1rem',
-          left: '1rem',
-          zIndex: 1000,
-          background: '#e74c3c',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          padding: '0.5rem 1rem',
-          cursor: 'pointer',
-        }}
-      >
-        Resign
-      </button>
+      <div style={{ position: 'absolute', top: '1rem', left: '1rem', zIndex: 1000 }}>
+        <button
+          onClick={() => setShowExitActions(true)}
+          style={{
+        background: '#e74c3c',
+        color: 'white',
+        border: 'none',
+        borderRadius: '4px',
+        padding: '0.5rem 1rem',
+        cursor: 'pointer',
+          }}
+        >
+          Exit Actions
+        </button>
+        {showExitActions && (
+            <div
+            style={{
+              position: 'absolute',
+              top: '2.5rem',
+              left: 0,
+              background: 'white',
+              border: '1px solid #ccc',
+              borderRadius: '6px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              padding: '1rem',
+              minWidth: '180px',
+              zIndex: 1100,
+            }}
+            >
+            <h4 style={{ margin: '0 0 1rem 0' }}>Choose Action</h4>
+            <button
+              onClick={() => {
+              ServerSync.Instance.Resign();
+              setGameMessage({
+                title: "You lost!",
+                message: "You have resigned the game.",
+                buttonText: "To menu",
+                onButtonClick() {
+                nav("/");
+                },
+                show: true,
+              });
+              setShowExitActions(false);
+              }}
+              style={{
+              background: '#e74c3c',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '0.5rem 1rem',
+              margin: '0.5rem 0',
+              width: '100%',
+              cursor: 'pointer',
+              }}
+            >
+              Resign
+            </button>
+            <button
+              onClick={() => {
+              //ServerSync.Instance.OfferDraw && ServerSync.Instance.OfferDraw();
+              setShowExitActions(false);
+              }}
+              style={{
+              background: '#3498db',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '0.5rem 1rem',
+              margin: '0.5rem 0',
+              width: '100%',
+              cursor: 'pointer',
+              }}
+            >
+              Offer Draw
+            </button>
+            <button
+              onClick={() => setShowExitActions(false)}
+              style={{
+              background: '#bdc3c7',
+              color: 'black',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '0.5rem 1rem',
+              margin: '0.5rem 0 0 0',
+              width: '100%',
+              cursor: 'pointer',
+              }}
+            >
+              Cancel
+            </button>
+            </div>
+        )}
+      </div>
       <button
         onClick={() => setShowPreferences(true)}
         style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 1000 }}

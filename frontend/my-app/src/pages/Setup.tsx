@@ -39,7 +39,7 @@ function ChessSetup({ mode }: { mode: GameMode }) {
     const [side, setSide_] = useState<'white' | 'black' | 'random'>('white');
     const [actualSide, setActualSide] = useState<PieceColor>('white');
     const [useTimer, setUseTimer] = useState(false);
-    const [yourTime, setYourTime] = useState("30");
+    const [yourTime, setYourTime] = useState("20");
     const [fen, setFen] = useState('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
     const [difficulty, setDifficulty] = useState('0');
 
@@ -94,7 +94,7 @@ function ChessSetup({ mode }: { mode: GameMode }) {
         GameMode: mode,
         onlineThisPlayer: actualSide,
         startPosition: fen,
-        time: Number.parseInt(yourTime)*1000,
+        time: useTimer ? Number.parseInt(yourTime)*1000*60 : 0,
         sfDifficulty : mode === "PLAY_LOCAL_AI" ? Number.parseInt(difficulty) : undefined
     }
 

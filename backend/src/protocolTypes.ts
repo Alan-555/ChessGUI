@@ -119,12 +119,12 @@ export type GameOverData = {
     winner: PieceColor | null
 }
 
-export type GameOverReason = "CHECKMATE" | "STALEMATE" | "SURRENDER" | "CONN_ERROR" | "GENERAL";
+export type GameOverReason = "CHECKMATE" | "STALEMATE" | "SURRENDER" | "CONN_ERROR" | "GENERAL" | "TIME_OUT" | "DRAW";
 
 export type MessageStateSync = {
     boardFen: string;
     playerToMove: PieceColor;
-    whiteTime: number;
+    whiteTime: number; //actual time remaining in milliseconds
     blackTime: number;
     legalMoves?: string[];
     youAre: PieceColor;
@@ -132,8 +132,9 @@ export type MessageStateSync = {
     isInCheck?: boolean; //if the player to move is in check
 
     //server-side only
-    gameStartTimestamp?: number; //timestamp when the game started
-    maxTime?: number; //max time for each player in milliseconds
+    useTime?: boolean,
+    whiteStartTimestamp?: number; //timestamp when the white player started their half-turn
+    blackStartTimestamp?: number; //timestamp when the black player started their half-turn
 }
 
 export type PieceColor = "white" | "black";
