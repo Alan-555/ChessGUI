@@ -28,9 +28,9 @@ import { BoardThemes, Themes, useGlobalConfig } from "../providers/GlobalConfigP
     const [customScaling, setCustomScaling] = useState(globalCfg.config.render.imgSize ? globalCfg.config.render.imgSize : 50 );
     const [boardTheme, setBoardTheme] = useState(globalCfg.config.render.theme);
     const [soundEnabled, setSoundEnabled] = useState(globalCfg.config.audio.doPlay);
+    const [serverURL, setServerURL] = useState(globalCfg.config.server.url);
   
     const savePreferences = () => {
-      console.log("SETTING FUCKING PREFS TO "+soundEnabled);
       
       globalCfg.setConfig({
         render:{
@@ -40,12 +40,14 @@ import { BoardThemes, Themes, useGlobalConfig } from "../providers/GlobalConfigP
         },
         audio:{
           doPlay:soundEnabled
+        },
+        server:{
+          url:serverURL
         }
       });
-      console.log("SETTING FUCKING PREFS TO "+globalCfg.config);
     };
 
-    useEffect(()=>savePreferences(), [orientation,scaling,customScaling,boardTheme,soundEnabled]);
+    useEffect(()=>savePreferences(), [orientation,scaling,customScaling,boardTheme,soundEnabled,serverURL]);
     
   
     return (
@@ -129,6 +131,23 @@ import { BoardThemes, Themes, useGlobalConfig } from "../providers/GlobalConfigP
             <Switch
               isChecked={soundEnabled}
               onChange={(e) => setSoundEnabled((e.target).checked)}
+            />
+          </FormControl>
+
+          <FormControl>
+            <FormLabel>Server URL</FormLabel>
+            <input
+              type="text"
+              value={serverURL}
+              onChange={(e) => setServerURL(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px",
+                backgroundColor: "#2D3748",
+                color: "white",
+                border: "1px solid #4A5568",
+                borderRadius: "4px",
+              }}
             />
           </FormControl>
   

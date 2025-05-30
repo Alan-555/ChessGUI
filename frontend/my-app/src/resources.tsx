@@ -14,6 +14,10 @@ import aud_take from './resources/take.wav';
 import aud_check from './resources/check.wav';
 import aud_move from './resources/move.wav';
 import aud_chat from './resources/chat.wav';
+import aud_gameOver from './resources/gameOver.mp3';
+
+import img_menu from './resources/menu.jpg';
+
 import { PieceColor, PieceType } from './engine/ChessBoardLogic';
 
 export {
@@ -28,14 +32,17 @@ export {
     img_w_knight,
     img_w_pawn,
     img_w_queen,
-    img_w_rook
+    img_w_rook,
+
+    img_menu
 };
 
 export{
     aud_take,
     aud_check,
     aud_move,
-    aud_chat
+    aud_chat,
+    aud_gameOver
 }
 
 export function GetPieceSrc(color_ : PieceColor, type : PieceType) {

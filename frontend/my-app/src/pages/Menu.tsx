@@ -6,6 +6,7 @@ import { useState } from "react";
 import Preferences from "./Prefs";
 import { Overlay } from "../components/Overlay";
 import { AnimatePresence } from "framer-motion";
+import { img_menu } from "../resources";
 
 export default function Menu() {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ export default function Menu() {
     <Box position="relative" width="100vw" height="100vh" overflow="hidden" padding={"10vh 10vw"}>
       {/* Blurred background image */}
       <Image
-        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTYx5IT0jbepzxU4fB_ruAHsucVmFTqqyNwng&s" // replace with actual image path
+        src={img_menu} // replace with actual image path
         alt="Background"
         objectFit="cover"
         width="100%"
@@ -142,8 +143,10 @@ export default function Menu() {
             maxWidth="400px"
             textAlign="center"
           >
-            {/*TODO: about */}
-            <p>ABOUT!</p>
+            <p>This application was developed as a semestral work for KIV/UUR. Author: Alexandr Vituško</p>
+            <br/>
+            <b>Graphic Attribution</b>
+            <p>Chess piece images used in this application are based on assets by M. János Uray, available at <a style={{color:"blue"}} href="https://greenchess.net/info.php?item=downloads">GreenChess.net</a> Licensed under <a style={{color:"blue"}} href="https://creativecommons.org/licenses/by-sa/3.0/deed.en">Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)</a></p>
             <Button
               marginTop="1rem"
               onClick={() => setIsModalOpen(false)}

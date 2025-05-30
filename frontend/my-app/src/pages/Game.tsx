@@ -16,7 +16,7 @@ import { GameMessageOverlay } from "../components/GameMessageOverlay";
 import { GameLeaveButton } from "../components/GameLeave";
 import { Box } from "@chakra-ui/react";
 import useSound from "use-sound";
-import { aud_chat, aud_check, aud_move, aud_take } from "../resources";
+import { aud_chat, aud_check, aud_gameOver, aud_move, aud_take } from "../resources";
 import { useGlobalConfig } from "../providers/GlobalConfigProvider";
 
 export const GlobalBoard: ChessBoard = new ChessBoard("SP");
@@ -37,6 +37,7 @@ export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
   const playCheck = new Audio(aud_check);
   const playRadio = new Audio(aud_chat);
   playRadio.volume = 0.1;
+  const playGameOver = new Audio(aud_gameOver);
   const [gameMessage, setGameMessage] = useState<GameMessageProps>({
     show: false,
     buttonText: "",
@@ -134,6 +135,8 @@ export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
       GlobalBoard.InitBoard(m.boardFen);
       GlobalBoard.SetNewSync(m);
       ServerSync.Instance.on<GameOverData>("onGameOver", (e) => {
+        if(playAud)
+          playGameOver.play();
         const messages: Record<GameOverReason, string> = {
           "CHECKMATE": "The game concluded in a checkmate.",
           "STALEMATE": "The game concluded in a stalemate.",

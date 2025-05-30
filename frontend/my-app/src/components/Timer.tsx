@@ -24,6 +24,10 @@ const Timer = ({ timeWhite, timeBlack, activeTimer }: { timeWhite: number, timeB
 
 
     useEffect(() => {
+        if(bottomSyncTime===0&&topSyncTime===0){
+
+            return;
+        }
         const interval = setInterval(() => {
             if (activeTimer === bottomColor && ServerSync.Instance.IsConnected)
                 setBottomTime(() => {
@@ -41,6 +45,9 @@ const Timer = ({ timeWhite, timeBlack, activeTimer }: { timeWhite: number, timeB
     }, [activeTimer, bottomColor, bottomTime, bottomSyncTime, topTime, topSyncTime]);
 
     const formatTime = (time_: number) => {
+        if(topSyncTime===0&&bottomSyncTime===0){
+            return "--:--";
+        }
         time_ = Math.max(0,time_);
         let time = time_ / 1000; // Convert milliseconds to seconds
         time = Math.floor(time);

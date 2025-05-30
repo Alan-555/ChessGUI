@@ -94,9 +94,12 @@ type GlobalConfig = {
         imgSize: number | undefined;
         preferredPlayerSide?: "BottomMe" | "BottomWhite";
         theme : string
-    };
+    },
     audio:{
         doPlay: boolean
+    },
+    server:{
+        url:string
     }
 };
 
@@ -113,6 +116,9 @@ const defaultGlobalConfig: GlobalConfig = {
     },
     audio:{
         doPlay:true
+    },
+    server:{
+        url:"http://localhost:8080"
     }
 };
 

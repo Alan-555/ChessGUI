@@ -264,7 +264,7 @@ export class ServerSync {
 
     private async WaitForMessage<K extends MessageType>(waitFor: K): Promise<Extract<Message, { type: K }> | undefined> {
         return new Promise(
-            (resolve, reject) => {//TODO: implement reject
+            (resolve, reject) => {
                 this.Enqueue({
                     waitFor: waitFor,
                     onReceive(data) {
@@ -281,7 +281,7 @@ export class ServerSync {
         const message_ = { ...message, clientID: this.clientID };
         if (waitFor !== undefined && waitFor !== null) {
             return new Promise(
-                (resolve, reject) => {//TODO: implement reject
+                (resolve, reject) => {
                     this.SendJSON(message_);
                     this.Enqueue({
                         waitFor: waitFor,
@@ -363,7 +363,7 @@ export class ServerSync {
             await setStatus("Game ready. Running initial sync...");
             return;
         }
-        await setStatus("Game created! Waiting for an opponent to join... (send them the code!)",gameId?.toString());
+        await setStatus("Game created! Waiting for an opponent to join...",gameId?.toString());
 
         await this.WaitForMessage(MessageType.INIT_GO);
 
@@ -457,7 +457,6 @@ export class ServerSync {
                     this.RequestSync();
                     break;
             }
-            //TODO: buffer?
             return;
         }
         if (dequeued) {

@@ -84,7 +84,8 @@ class StockfishInterface {
         await this.communicator.sendCommand(positionCommand);
     }
     async setDifficulty(diff: string) {
-        this.communicator.sendCommand("setoption name Skill Level value " + diff);
+        this.communicator.sendCommand("setoption name UCI_LimitStrength value true");
+        this.communicator.sendCommand("setoption name UCI_Elo value " + diff);
     }
 
     async getAllLegalMoves(): Promise<string[]> {
@@ -116,6 +117,10 @@ class StockfishInterface {
     async getBestMove(wTime : number, bTime : number): Promise<string> {
         wTime = Math.min(1000*60*5,wTime);
         bTime = Math.min(1000*60*5,bTime);
+        if(wTime==0){
+            wTime = 1000 * 60;
+            bTime = wTime;
+        }
         const output = await this.communicator.sendCommand('go wtime '+wTime+' btime '+bTime,  (buffer) => {
             const bestMoveLine = buffer.split(/\r?\n/).find((line) => line.startsWith('bestmove'));
             if (bestMoveLine) {

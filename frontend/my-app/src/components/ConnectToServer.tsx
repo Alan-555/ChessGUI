@@ -4,6 +4,7 @@ import { ServerSync } from '../engine/ServerSync';
 import { useNavigate } from 'react-router-dom';
 import { GlobalBoard } from '../pages/Game';
 import { useToast } from '@chakra-ui/react';
+import { useGlobalConfig } from '../providers/GlobalConfigProvider';
 
 
 
@@ -18,7 +19,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ config, abort }) => {
     const initStart = useRef(false);
     const [loadText, setLoadText_] = useState("Establishing connection...");
     const [codeText, setCodeText] = useState("");
-
+    const globalCfg = useGlobalConfig();
     let setLoadText = async (m: string, code? : string) => {
         
         if(code)
@@ -40,7 +41,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ config, abort }) => {
                 ServerSync.Instance.on("onClose", e => {
                     abort("Failed to establish connection to the server.", e.code.toString());
                 });
-                await ServerSync.Instance.Connect("http://localhost:8080");
+                await ServerSync.Instance.Connect(globalCfg.config.server.url);
                 ServerSync.Instance.offAll("onClose");
                 ServerSync.Instance.on("onClose", e => {
                     abort("Server aborted connection", e.reason);

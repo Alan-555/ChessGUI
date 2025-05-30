@@ -71,6 +71,19 @@ function ChessSetup({ mode }: { mode: GameMode }) {
             setActualSide(Math.random() < 0.5 ? 'white' : 'black');
         }
     }
+    const validateFen = () => {
+        if (!IsFenValid(fen)) {
+            toast({
+                title: "Invalid FEN",
+                description: "The FEN string you entered is not valid.",
+                status: "error",
+                duration: 4000,
+                isClosable: true,
+            })
+            return false;
+        }
+        return true;
+    }
 
     const styleSelected = {
         border: '2px solid white',
@@ -95,8 +108,8 @@ function ChessSetup({ mode }: { mode: GameMode }) {
         GameMode: mode,
         onlineThisPlayer: actualSide,
         startPosition: fen,
-        time: useTimer ? Number.parseInt(yourTime)*1000*60 : 0,
-        sfDifficulty : mode === "PLAY_LOCAL_AI" ? Number.parseInt(difficulty) : undefined
+        time: useTimer ? Number.parseInt(yourTime) * 1000 * 60 : 0,
+        sfDifficulty: mode === "PLAY_LOCAL_AI" ? Number.parseInt(difficulty) : undefined
     }
 
 
@@ -167,7 +180,8 @@ function ChessSetup({ mode }: { mode: GameMode }) {
                                     placeholder="Minutes"
                                     value={yourTime}
                                     type='number'
-                                    onChange={(e) => setYourTime(e.target.value)}
+                                    onChange={(e) =>{ setYourTime(e.target.value)}}
+                                    onBlur={e=>{if(e.currentTarget.value===""&&useTimer)setUseTimer(false)}}
                                 />
                             </Box>
                         </HStack>
@@ -180,10 +194,7 @@ function ChessSetup({ mode }: { mode: GameMode }) {
                         <Input marginRight={"10px"} width={"80%"} size="lg" value={fen} onChange={(e) => setFen(e.target.value)} />
                         <Button
                             onClick={() => {
-                                if (!IsFenValid(fen)) {
-                                    alert("Invalid FEN");
-                                    return;
-                                }
+                                if (!validateFen()) return;
                                 setIsOpen(true);
                                 GlobalBoard.InitBoard(config.startPosition, true);
                             }}
@@ -204,20 +215,20 @@ function ChessSetup({ mode }: { mode: GameMode }) {
                         <Box w="full">
                             <Text fontSize="xl" mb={2}>Stockfish difficulty</Text>
                             <Select size="lg" value={difficulty} onChange={(e) => setDifficulty(e.currentTarget.value)}>
-                                {[['Beginner',0], ['Easy',5], ['Medium',10], ['Hard',15], ['Master',20]].map(level => (
+                                {[['Beginner', 500], ['Easy', 1000], ['Medium', 1500], ['Hard', 2500], ['Master', 3000]].map(level => (
                                     <option key={level[0]} value={level[1]}>{level[0]}</option>
                                 ))}
                             </Select>
                         </Box>
                     )}
 
-                    <Button onClick={() => { startLoad(true) }} colorScheme="teal" size="lg" fontSize="xl" px={10} py={6}>Start Game</Button>
+                    <Button onClick={() => { if (!validateFen()) return; startLoad(true) }} colorScheme="teal" size="lg" fontSize="xl" px={10} py={6}>Start Game</Button>
                 </VStack>
             </Box>
             <Overlay show={isOpen} onClose={() => {
                 let fen_ = GlobalBoard.CreateFen();
                 const oldAppend = fen.split(" ").slice(1);
-                if(oldAppend.length > 0) {
+                if (oldAppend.length > 0) {
                     fen_ += " " + oldAppend.join(" ");
                 }
                 setFen(fen_);
@@ -226,7 +237,7 @@ function ChessSetup({ mode }: { mode: GameMode }) {
             }}>
                 <GameRaw gameConfig={setupBoardCfg} />
             </Overlay>
-            <Overlay buttonText='Cancel'  show={isLoad} hideConfirm={false} onClose={()=>{startLoad(false); ServerSync.Instance.Quit("User aborted connection")}}>
+            <Overlay buttonText='Cancel' show={isLoad} hideConfirm={false} onClose={() => { startLoad(false); ServerSync.Instance.Quit("User aborted connection") }}>
                 <LoadingScreen config={config}
                     abort={
                         (t, d) => {

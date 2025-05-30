@@ -1,5 +1,5 @@
 import { Box, Grid, Image, useBoolean } from "@chakra-ui/react";
-import { useEffect, useRef, useState } from "react";
+import { CSSProperties, useEffect, useRef, useState } from "react";
 import { img_b_bishop, img_b_king, img_b_knight, img_b_pawn, img_b_queen, img_b_rook } from "../resources";
 import PieceDrag from "./PieceDrag";
 import { BoardThemes, GetRenderSize, useGlobalConfig } from "../providers/GlobalConfigProvider";
@@ -29,11 +29,11 @@ export default function ChessBoardComponent() {
     //const board = useRef<ChessBoard>(GlobalBoard);
     const [version, setVersion] = useState(0);
     const globalCfg = useGlobalConfig();
-    
+
     const gameConfig = useGameConfig();
     const currentTheme = BoardThemes[globalCfg.config.render.theme];
     const [selectPromotionPopup, setSelection] = useBoolean(false);
-    const [selectPromotionMove, setMove] = useState<{piece: Piece, to: { file: number; rank: number }}>()
+    const [selectPromotionMove, setMove] = useState<{ piece: Piece, to: { file: number; rank: number } }>()
 
     const board = { current: GlobalBoard };
 
@@ -56,12 +56,12 @@ export default function ChessBoardComponent() {
     }
 
     const movePiece = (piece: Piece, to: { file: number; rank: number }) => {
-        if (!GlobalBoard.isEditMode && piece.type === PieceType.PAWN && (to.rank === 0 || to.rank === 7) && GlobalBoard.IsMoveLegal(piece,to)) {
-            setMove({piece:piece,to:to});
+        if (!GlobalBoard.isEditMode && piece.type === PieceType.PAWN && (to.rank === 0 || to.rank === 7) && GlobalBoard.IsMoveLegal(piece, to)) {
+            setMove({ piece: piece, to: to });
             setSelection.on();
             return;
         }
-        board.current.MovePiece(piece,to);
+        board.current.MovePiece(piece, to);
     }
 
 
@@ -152,7 +152,7 @@ export default function ChessBoardComponent() {
 
                 <PieceDrag dragContext={dragContext} setDragContext={setDragContext} onTrueDrag={onTrueDrag}></PieceDrag>
                 <Overlay show={selectPromotionPopup} hideConfirm={true} >
-                    <Promotion color={selectPromotionMove?.piece.color} onSelect={e=>{GlobalBoard.MovePiece(selectPromotionMove!.piece,selectPromotionMove!.to,e); setSelection.off()}}></Promotion>
+                    <Promotion color={selectPromotionMove?.piece.color} onSelect={e => { GlobalBoard.MovePiece(selectPromotionMove!.piece, selectPromotionMove!.to, e); setSelection.off() }}></Promotion>
                 </Overlay>
                 {theBoard.map((row, rowIndex) =>
                     row.map((square, colIndex) => {
@@ -161,21 +161,26 @@ export default function ChessBoardComponent() {
                         }
                         const isDark = (rowIndex + colIndex) % 2 === 1;
                         let style = isDark ? currentTheme.darkSquareStyles : currentTheme.lightSquareStyles;
+                        let highlightStyle: CSSProperties | undefined = undefined;
                         const isSelected = selectContext.isSelected && selectContext.square === square;
+                        const pieceImg = square != null ? square.piece?.imgSrc : null;
                         if (isSelected)
-                            style = { ...style, background: "rgb(100, 181, 246)" };
+                            highlightStyle = { background: "gray", opacity: "0.3", transform: "scale(1)", borderRadius: "50%" };
                         if (square.inCheck && square.piece) {
-                            style = { ...style, background: "red" };
+                            highlightStyle = { background: "radial-gradient(circle,rgba(255, 0, 0, 1) 0%, rgba(248, 32, 32, 0) 70%, rgba(0, 0, 0, 0) 100%)", opacity: "1", transform: "scale(1.1)", borderRadius: "100%", zIndex: "1" };
                         }
                         if (selectContext.square?.piece)
                             if (board.current.GetLegalMoves(selectContext.square?.piece).some(x => x.file === colIndex && x.rank === rowIndex)) {
-                                style = { ...style, background: "green" };
+                                if (pieceImg)
+                                    highlightStyle = { background: "radial-gradient(circle,rgb(0, 251, 239) 0%, rgba(248, 32, 32, 0) 90%, rgba(0, 0, 0, 0) 100%)", opacity: "0.5", transform: "scale(1)", borderRadius: "100%" };
+                                else
+                                    highlightStyle = { background: "radial-gradient(circle,rgb(0, 251, 255) 0%, rgba(248, 32, 32, 0) 90%, rgba(0, 0, 0, 0) 100%)", opacity: "0.5", transform: "scale(0.3)", borderRadius: "100%" };
 
                             }
-                        const pieceImg = square != null ? square.piece?.imgSrc : null;
 
                         return (
                             <Box
+                                position={"relative"}
                                 style={style}
                                 key={`${rowIndex}-${colIndex}`}
                                 w={sizePx}
@@ -199,6 +204,7 @@ export default function ChessBoardComponent() {
                                         src={pieceImg}
                                         alt={`${square?.piece?.color}${square?.piece?.type}`}
                                         pointerEvents={IsClickValid(square.piece) ? "all" : "none"}
+                                        zIndex={"10"}
                                         onMouseDown={e => {
                                             if (!IsClickValid(square.piece)) return;
                                             e.preventDefault();
@@ -239,6 +245,12 @@ export default function ChessBoardComponent() {
                                         w="80%"
                                         h="80%"
                                     />
+                                )}
+                                {highlightStyle && (
+
+                                    <div style={{ ...highlightStyle, width: "100%", height: "100%", position: "absolute" }}>
+
+                                    </div>
                                 )}
                             </Box>
                         );
