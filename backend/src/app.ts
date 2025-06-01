@@ -1,4 +1,5 @@
-import Config from '../config.json';
+import fs from 'fs';
+const Config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
 import WebSocketSingleton from './server';
 import { StockfishInterface } from './sf';
 export default Config;

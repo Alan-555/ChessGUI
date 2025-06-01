@@ -10,9 +10,7 @@ function SetupPieceSpawner({ board, setDragContext }: { board: ChessBoard, setDr
 
     return (
         <>
-
             <Box
-            
                 position="fixed"
                 top="10px"
                 left="50%"

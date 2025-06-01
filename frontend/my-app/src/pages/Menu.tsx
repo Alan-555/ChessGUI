@@ -5,7 +5,6 @@ import { GameMode } from "../providers/GameConfigProvider";
 import { useState } from "react";
 import Preferences from "./Prefs";
 import { Overlay } from "../components/Overlay";
-import { AnimatePresence } from "framer-motion";
 import { img_menu } from "../resources";
 
 export default function Menu() {
@@ -14,9 +13,8 @@ export default function Menu() {
   const [prefsOpen, setPrefsOpen] = useState(false);
   return (
     <Box position="relative" width="100vw" height="100vh" overflow="hidden" padding={"10vh 10vw"}>
-      {/* Blurred background image */}
       <Image
-        src={img_menu} // replace with actual image path
+        src={img_menu}
         alt="Background"
         objectFit="cover"
         width="100%"
@@ -29,7 +27,6 @@ export default function Menu() {
         transform="scale(1.05);"
       />
 
-      {/* Grid layout with gaps in the center */}
       <Grid
         templateRows="1fr 10px 1fr"
         templateColumns="1fr 10px 1fr"

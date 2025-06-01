@@ -1,5 +1,5 @@
 import { StyleConfig } from "@chakra-ui/react";
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 
 
@@ -82,6 +82,38 @@ export const BoardThemes: BoardThemesType = {
         lightSquareStyles: {
             background: "radial-gradient(circle at center, #d44802, #786c30)"
         }
+    },
+    "A bad trip":{
+        darkSquareStyles: {
+            background: "repeating-conic-gradient(from 45deg, #ff00cc 0deg 10deg, #3333ff 10deg 20deg, #00ffcc 20deg 30deg, #fffb00 30deg 40deg, #ff00cc 40deg 50deg)",
+            backgroundSize: "40px 40px",
+            border: "3px dashed #ff0000",
+            boxShadow: "0 0 20px 10px #00ffcc, inset 0 0 10px 5px #ff00cc",
+            filter: "contrast(2) hue-rotate(90deg) saturate(3)",
+            animation: "spin 2s linear infinite"
+        },
+        lightSquareStyles: {
+            background: "linear-gradient(135deg, #00ffcc 25%, #fffb00 50%, #ff00cc 75%, #3333ff 100%)",
+            backgroundSize: "200% 200%",
+            border: "4px dotted #00ffcc",
+            boxShadow: "0 0 30px 15px #fffb00, inset 0 0 15px 7px #3333ff",
+            filter: "blur(1px) brightness(1.5) invert(0.2)",
+            animation: "pulse 1s alternate infinite"
+        }
+    },
+    "Maria & Teresa":{
+        darkSquareStyles: {
+            background: "url('https://cdn-images.dzcdn.net/images/cover/186193b9de40a2be42a15da3ff3cfeb2/0x1900-000000-80-0-0.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundColor: "black"
+        },
+        lightSquareStyles: {
+            background: "url('https://lh3.googleusercontent.com/SIAoNF-wA6aFwtSdhXOQYROBgZXa804vd_9Y2aA0CNw8muUu-OZ9ZtwDTkWgt607aHURX1V1NWWgWkU=w544-h544-p-l90-rj')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundColor: "rgb(188, 188, 188)"
+        }
     }
 };
 
@@ -142,6 +174,26 @@ export const GlobalConfigProvider: React.FC<{
     initialValue?: GlobalConfig;
 }> = ({ children, initialValue }) => {
     const [config, setConfig] = useState<GlobalConfig>(initialValue ?? defaultGlobalConfig);
+
+    // Inject global keyframes for custom animations
+    useEffect(() => {
+        const style = document.createElement("style");
+        style.innerHTML = `
+            @keyframes spin {
+                0% { transform: rotate(0deg) scale(1) translateX(-50px);}
+                50% {transform: rotate(180deg) scale(0)  translateX(50px);}
+                100% { transform: rotate(360deg) scale(1) translateX(-50px);}
+            }
+            @keyframes pulse {
+                0% { filter: blur(1px) brightness(1.5) invert(0.2); transform: rotate(0deg);  }
+                100% { filter: blur(2px) brightness(2) invert(0.4); transform: rotate(-360deg);}
+            }
+        `;
+        document.head.appendChild(style);
+        return () => {
+            document.head.removeChild(style);
+        };
+    }, []);
 
     return (
         <GlobalConfigContext.Provider value={{ config, setConfig }}>

@@ -22,9 +22,9 @@ class Connection {
         this.tableSession_ = val;
     }
 
-    public SetTableSession(val: TableSession) {
+    public SetTableSession(val: TableSession, register : boolean = false) {
         this.tableSession_ = val;
-        if (val.gameID)
+        if (val.gameID&&register)
             Connection.waitingTables[val.gameID] = val;
 
     }
@@ -179,7 +179,7 @@ class WebSocketSingleton {
             ts.state.playerToMove = data.data.boardFen.split(' ')[1].toLowerCase() == 'w' ? "white" : "black";
             await ts.sfInterface.Init();
             await ts.sfInterface.setPosition(data.data.boardFen);
-            conn.SetTableSession(ts);
+            conn.SetTableSession(ts,true);
             conn.isHost = true;
             if (!isAi)
                 Reply({
@@ -339,7 +339,7 @@ class WebSocketSingleton {
             if (enemySoc)
                 this.SendMessageTo(enemySoc, {
                     type: MessageType.CHAT,
-                    data: { message: "Your opponent request a draw!", isServerMessage: true }
+                    data: { message: "Your opponent requests a draw!", isServerMessage: true }
                 });
             this.SendMessageTo(socket, {
                 type: MessageType.CHAT,

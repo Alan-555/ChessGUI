@@ -32,7 +32,7 @@ const GameMessage: React.FC<GameMessageProps> = ({
 
 const styles: { [key: string]: React.CSSProperties } = {
     overlay: {
-        position: "absolute", // Set to absolute to overlay parent only
+        position: "absolute",
         top: 0,
         left: 0,
         width: "100%",

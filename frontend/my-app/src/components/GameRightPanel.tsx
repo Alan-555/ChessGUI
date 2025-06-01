@@ -1,7 +1,6 @@
-import { Box, Button, Flex } from "@chakra-ui/react";
+import { Box, Flex } from "@chakra-ui/react";
 import Timer from "./Timer";
 import MoveHistory from "./MoveHistory";
-import { useState } from "react";
 import { ChatMessage, GlobalBoard, Turn } from "../pages/Game";
 import Chat from "./Chat";
 
@@ -23,7 +22,6 @@ const GameRightPanel = ({chat,sendChat,timer, moves}:{chat:ChatMessage[],moves :
                 },
             }}
         >
-            {/* Top section */}
             <Box maxHeight={"40vh"}  flex="1" bg="gray.100" borderRadius="md" p={4} boxShadow="sm">
                 <Chat messages={chat} onSendMessage={(message) => {
                     sendChat(message);

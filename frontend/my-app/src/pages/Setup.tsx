@@ -1,4 +1,4 @@
-import React, { act, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
     Box,
     Button,
@@ -8,29 +8,15 @@ import {
     Text,
     VStack,
     HStack,
-    Stack,
-    useColorModeValue,
-    background,
-    useDisclosure,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalHeader,
-    ModalOverlay,
     useToast,
 } from '@chakra-ui/react';
 import { img_b_king, img_w_king } from '../resources';
 import { ImageSplit } from '../components/ImageSplit';
-import { useNavigate } from 'react-router-dom';
 import { GameConfig, GameMode } from '../providers/GameConfigProvider';
 import { GlobalBoard } from '../pages/Game';
-import Game from './Game';
 import { Overlay } from '../components/Overlay';
-import { ChessBoard, IsFenValid, PieceColor } from '../engine/ChessBoardLogic';
+import { IsFenValid, PieceColor } from '../engine/ChessBoardLogic';
 import GameRaw from './GameRaw';
-import { useGlobalConfig } from '../providers/GlobalConfigProvider';
-import { number } from 'framer-motion';
 import LoadingScreen from '../components/ConnectToServer';
 import { ServerSync } from '../engine/ServerSync';
 
@@ -45,9 +31,6 @@ function ChessSetup({ mode }: { mode: GameMode }) {
     const [difficulty, setDifficulty] = useState('0');
 
     const [isLoad, startLoad] = useState(false);
-
-    const GlobalConf = useGlobalConfig();
-    const navigate = useNavigate();
 
     const yourTimeRef = useRef<HTMLInputElement>(null);
 
@@ -215,7 +198,7 @@ function ChessSetup({ mode }: { mode: GameMode }) {
                         <Box w="full">
                             <Text fontSize="xl" mb={2}>Stockfish difficulty</Text>
                             <Select size="lg" value={difficulty} onChange={(e) => setDifficulty(e.currentTarget.value)}>
-                                {[['Beginner', 500], ['Easy', 1000], ['Medium', 1500], ['Hard', 2500], ['Master', 3000]].map(level => (
+                                {[['Beginner (500)', 500], ['Intermediate (1000)', 1000], ['Skilled (1500)', 1500], ['Experienced (2000)', 2000], ['Master (3000)', 3000]].map(level => (
                                     <option key={level[0]} value={level[1]}>{level[0]}</option>
                                 ))}
                             </Select>

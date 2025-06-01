@@ -1,21 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import BackButton from "../components/BackButton";
-import Chat from "../components/Chat";
+import { useEffect, useRef, useState } from "react";
 import ChessBoardComponent from "../components/ChessBoard";
-import { GameConfig, GameConfigProvider, useGameConfig } from "../providers/GameConfigProvider";
-import Timer from "../components/Timer";
-import MoveHistory from "../components/MoveHistory";
+import { GameConfig, GameConfigProvider } from "../providers/GameConfigProvider";
 import Preferences from "./Prefs";
 import { Overlay } from "../components/Overlay";
 import GameRightPanel from "../components/GameRightPanel";
-import { ChessBoard, GetMoveSAN, Move, PieceColor } from "../engine/ChessBoardLogic";
+import { ChessBoard, GetMoveSAN } from "../engine/ChessBoardLogic";
 import { GameOverData, GameOverReason, MessageStateSync, ServerSync } from "../engine/ServerSync";
 import GameMessage, { GameMessageProps } from "../components/GameMessage";
 import { useNavigate } from "react-router-dom";
 import { GameMessageOverlay } from "../components/GameMessageOverlay";
 import { GameLeaveButton } from "../components/GameLeave";
 import { Box } from "@chakra-ui/react";
-import useSound from "use-sound";
 import { aud_chat, aud_check, aud_gameOver, aud_move, aud_take } from "../resources";
 import { useGlobalConfig } from "../providers/GlobalConfigProvider";
 
@@ -70,7 +65,6 @@ export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
   const once = useRef(false);
 
   useEffect(() => {
-    console.log("crap alerady prepared? " + once.current);
     if (once.current)
       return;
     once.current = true;
@@ -123,14 +117,12 @@ export default function Game({ gameConfig }: { gameConfig: GameConfig }) {
         });
 
       }
-      console.log("san: " + san);
 
 
       setGameTime({
         blackTime: m.blackTime,
         whiteTime: m.whiteTime
       });
-      console.log("Time " + gameTime);
 
       GlobalBoard.InitBoard(m.boardFen);
       GlobalBoard.SetNewSync(m);

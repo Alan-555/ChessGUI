@@ -1,6 +1,5 @@
-import { GlobalBoard } from "../pages/Game";
 import { GameConfig } from "../providers/GameConfigProvider";
-import { ChessBoard, Move, PieceColor, Position } from "./ChessBoardLogic";
+import { Move, PieceColor } from "./ChessBoardLogic";
 
 export enum MessageType {
     SYNC, //server-> client (sync info)
@@ -116,9 +115,6 @@ export type ServerPos = {
     rank: number
 }
 
-type Register = {
-    playerID: string
-}
 
 export type GameOverData = {
     reason: GameOverReason,
@@ -127,15 +123,15 @@ export type GameOverData = {
 export type GameOverReason = "CHECKMATE" | "STALEMATE" | "SURRENDER" | "CONN_ERROR" | "GENERAL" | "TIME_OUT" | "DRAW";
 
 export type MessageStateSync = {
-    boardFen: string;
-    playerToMove: PieceColor;
-    whiteTime: number;
-    blackTime: number;
-    legalMoves?: string[];
-    youAre: PieceColor;
+    boardFen: string; //Current position
+    playerToMove: PieceColor; //Who's to move
+    whiteTime: number; //Time remaining for white
+    blackTime: number; //Time remaining for black
+    legalMoves?: string[]; //All legal moves
+    youAre: PieceColor; //Who is the local player
     sfDifficulty?: number; //AI difficulty, if applicable
     isInCheck?: boolean; //if the player to move is in check
-    moves : string[]
+    moves : string[] //UNUSED
 }
 
 type QueueRecord = {
@@ -183,7 +179,7 @@ export class ServerSync {
     private static instance: ServerSync;
     private socket: WebSocket | null = null;
     private queue: Queue = new Queue();
-    private clientID: string = Math.floor(Math.random() * 1000).toString();
+    private clientID: string = Math.floor(Math.random() * 10000).toString();
 
     public get IsConnected() {
         return this.socket !== null && this.socket.readyState === WebSocket.OPEN;

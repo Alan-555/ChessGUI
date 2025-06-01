@@ -1,13 +1,11 @@
 import { Box, Grid, Image, useBoolean } from "@chakra-ui/react";
-import { CSSProperties, useEffect, useRef, useState } from "react";
-import { img_b_bishop, img_b_king, img_b_knight, img_b_pawn, img_b_queen, img_b_rook } from "../resources";
+import { CSSProperties, useEffect, useState } from "react";
 import PieceDrag from "./PieceDrag";
 import { BoardThemes, GetRenderSize, useGlobalConfig } from "../providers/GlobalConfigProvider";
-import { ChessBoard, Piece, PieceType, Square } from "../engine/ChessBoardLogic";
+import { Piece, PieceType, Square } from "../engine/ChessBoardLogic";
 import { useGameConfig } from "../providers/GameConfigProvider";
 import SetupPieceSpawner from "./SetupPieceSpawner";
 import { GlobalBoard } from "../pages/Game";
-import GameMessage from "./GameMessage";
 import { Overlay } from "./Overlay";
 import Promotion from "./Promotion";
 
@@ -26,16 +24,16 @@ export type SelectContext = {
 
 
 export default function ChessBoardComponent() {
-    //const board = useRef<ChessBoard>(GlobalBoard);
-    const [version, setVersion] = useState(0);
     const globalCfg = useGlobalConfig();
-
     const gameConfig = useGameConfig();
+
     const currentTheme = BoardThemes[globalCfg.config.render.theme];
+    const board = { current: GlobalBoard };
+
+
     const [selectPromotionPopup, setSelection] = useBoolean(false);
     const [selectPromotionMove, setMove] = useState<{ piece: Piece, to: { file: number; rank: number } }>()
 
-    const board = { current: GlobalBoard };
 
     const [dragContext, setDragContext_] = useState<DragContext>({
         isDragging: false,
@@ -103,10 +101,10 @@ export default function ChessBoardComponent() {
     }
 
     const IsClickValid = (piece: Piece | null) => {
-        if (gameConfig?.GameMode == "BOARD_SETUP") return true;
+        if (gameConfig?.GameMode === "BOARD_SETUP") return true;
         if (piece === null) return true;
         if (piece.color !== gameConfig?.onlineThisPlayer) return false;
-        if (GlobalBoard.currentSync?.playerToMove != gameConfig.onlineThisPlayer) return false;
+        if (GlobalBoard.currentSync?.playerToMove !== gameConfig.onlineThisPlayer) return false;
         return true;
     }
 
@@ -120,19 +118,10 @@ export default function ChessBoardComponent() {
     }
 
     useEffect(() => {
-        // define a custom handler function
-        // for the contextmenu event
         const handleContextMenu = (e: Event) => {
-            // prevent the right-click menu from appearing
             e.preventDefault()
         }
-
-        // attach the event listener to 
-        // the document object
         document.addEventListener("contextmenu", handleContextMenu)
-
-        // clean up the event listener when 
-        // the component unmounts
         return () => {
             document.removeEventListener("contextmenu", handleContextMenu)
         }
@@ -209,7 +198,7 @@ export default function ChessBoardComponent() {
                                             if (!IsClickValid(square.piece)) return;
                                             e.preventDefault();
 
-                                            if (e.button === 2 && gameConfig?.GameMode == "BOARD_SETUP") {
+                                            if (e.button === 2 && gameConfig?.GameMode === "BOARD_SETUP") {
                                                 board.current.MovePiece(square.piece!, { file: 0, rank: 8 });
                                                 setSelectContext({
                                                     isSelected: false,

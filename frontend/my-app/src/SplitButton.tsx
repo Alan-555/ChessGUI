@@ -3,12 +3,11 @@ import {
     Button,
     HStack,
     Stack,
-    useBoolean,
     useToast,
 } from "@chakra-ui/react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { GameConfig, GameMode } from "./providers/GameConfigProvider";
+import { GameMode } from "./providers/GameConfigProvider";
 import { Overlay } from "./components/Overlay";
 import { Input } from "@chakra-ui/react";
 import LoadingScreen from "./components/ConnectToServer";

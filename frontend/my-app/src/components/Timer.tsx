@@ -42,7 +42,7 @@ const Timer = ({ timeWhite, timeBlack, activeTimer }: { timeWhite: number, timeB
         }, 10);
 
         return () => clearInterval(interval);
-    }, [activeTimer, bottomColor, bottomTime, bottomSyncTime, topTime, topSyncTime]);
+    }, [activeTimer, bottomColor, bottomTime, bottomSyncTime, topTime, topSyncTime, syncStartTimeStamp]);
 
     const formatTime = (time_: number) => {
         if(topSyncTime===0&&bottomSyncTime===0){

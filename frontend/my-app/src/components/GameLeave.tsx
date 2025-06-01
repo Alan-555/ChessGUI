@@ -35,7 +35,6 @@ export const GameLeaveButton: React.FC<LeaveButtonProps> = ({
                 zIndex={1000}
                 transition={{ width: { duration: 0.25, ease: "easeInOut" } }}
             >
-                {/* Always-visible Leave button */}
                 <Button
 
                     zIndex={1000}
@@ -53,7 +52,6 @@ export const GameLeaveButton: React.FC<LeaveButtonProps> = ({
                     Leave
                 </Button>
 
-                {/* Conditionally show the two action buttons */}
                 <AnimatePresence>
                     {isHovered && (
                         <MotionFlex

@@ -1,5 +1,5 @@
-import { Box, Button, Portal } from "@chakra-ui/react";
-import { ReactNode, useState } from "react";
+import { Button, Portal } from "@chakra-ui/react";
+import { ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { chakra } from "@chakra-ui/react";
 const MotionBox = chakra(motion.div);

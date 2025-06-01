@@ -7,7 +7,6 @@ interface OverlayProps {
 
 export const GameMessageOverlay: React.FC<OverlayProps> = ({ show, children }) => {
   return (
-    // Fade in/out the dark backdrop
     <Fade in={show}>
       <Box
         position="absolute"
@@ -22,7 +21,6 @@ export const GameMessageOverlay: React.FC<OverlayProps> = ({ show, children }) =
         zIndex={1000}
         pointerEvents={show ? "all" : "none"}
       >
-        {/* Scale the message box from 90%→100% */}
         <ScaleFade initialScale={0.9} in={show}>
           <Box
             bg="white"

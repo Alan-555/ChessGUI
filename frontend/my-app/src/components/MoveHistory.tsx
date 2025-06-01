@@ -10,7 +10,7 @@ interface MoveHistoryProps {
 
 const MoveHistory: React.FC<MoveHistoryProps> = ({
     moves,
-    showNavigationButtons = false,
+    showNavigationButtons = false, //unimplemented
     onPrevious,
     onNext,
 }) => {

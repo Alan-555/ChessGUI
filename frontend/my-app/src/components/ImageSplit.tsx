@@ -1,8 +1,8 @@
 import { Box, Image } from "@chakra-ui/react";
 
 interface ImageSplitProps {
-  topLeftSrc: string;      // URL string from import
-  bottomRightSrc: string;  // URL string from import
+  topLeftSrc: string;     
+  bottomRightSrc: string; 
   width?: string;
   height?: string;
 }

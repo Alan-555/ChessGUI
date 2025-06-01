@@ -3,7 +3,7 @@ import { Box, Flex, Image, Button } from "@chakra-ui/react";
 import { img_b_queen, img_w_queen } from "../resources";
 import { img_b_rook, img_w_rook, img_b_bishop, img_w_bishop, img_b_knight, img_w_knight } from "../resources";
 
-type PromotionPiece = "queen" | "rook" | "bishop" | "night";
+type PromotionPiece = "queen" | "rook" | "bishop" | "night"; //it's night now. Don't question it
 
 interface PromotionProps {
     color: "white" | "black" | undefined;

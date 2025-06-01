@@ -138,7 +138,7 @@ export class ChessBoard {
     public InitBoard(fen: string = "SP", editMode: boolean = false) {
         this.isEditMode = editMode;
         const board: Square[][] = [];
-        console.log("Init neww board with FEN: ", fen);
+        console.log("Init new board with FEN: ", fen);
 
         // Default to starting position if "SP" is used
         const fenToParse = fen === "SP"
@@ -329,6 +329,7 @@ export function IsFenValid(fen: string): boolean {
     return regex.test(fen) || regex.test(fen+" w - - 0 1");
 }
 
+//an after-thought. As Stockfish does not support SAN. In theory local game should not require the server. It is not implemented regardless so who gives ¯\_(ツ)_/¯
 export function GetMoveSAN(prevFen: string, newFen: string): string | null {
     if(prevFen === newFen) return null;
     const game = new Chess(prevFen);

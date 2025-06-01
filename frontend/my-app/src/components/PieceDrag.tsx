@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Image } from "@chakra-ui/react";
-import { GetRenderSize, useGlobalConfig } from "../providers/GlobalConfigProvider";
+import { GetRenderSize } from "../providers/GlobalConfigProvider";
 import { DragContext } from "./ChessBoard";
 
 const PieceDrag = ({

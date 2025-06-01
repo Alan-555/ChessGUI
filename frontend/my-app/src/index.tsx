@@ -2,8 +2,7 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  useLocation,
-  useNavigate,
+  useLocation
 } from "react-router-dom";
 import { Box, ChakraProvider } from "@chakra-ui/react";
 import { AnimatePresence } from "framer-motion";
@@ -20,7 +19,6 @@ import theme from "./theme";
 import { ServerSync } from "./engine/ServerSync";
 
 function AppRoutes() {
-  const nav = useNavigate();
   const location = useLocation();
   const prevLocation = useRef(location);
   
@@ -28,12 +26,9 @@ function AppRoutes() {
     // Runs when location changes
     if (prevLocation.current.pathname !== location.pathname) {
       console.log('Route changed to '+location.pathname);
-      console.log(location.state);
       if(ServerSync.Instance.IsConnected && location.pathname !=="/play"){
         ServerSync.Instance.Quit("Client navigated out of session"); //Going away
       }
-
-      // Update previous location
       prevLocation.current = location;
     }
   }, [location]);

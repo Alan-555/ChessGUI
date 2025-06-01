@@ -110,8 +110,6 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ config, abort }) => {
             <h2>{loadText}.</h2>
             <p  onMouseDown={
                 ()=>{
-                    console.log("TETETTET");
-                    
                     navigator.clipboard.writeText(codeText);
                     toast({
                         title: "Copied to clipboard",
