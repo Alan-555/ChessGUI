@@ -4,7 +4,7 @@ import {
   Route,
   useLocation
 } from "react-router-dom";
-import { Box, ChakraProvider } from "@chakra-ui/react";
+import { Box, ChakraProvider, ColorModeScript } from "@chakra-ui/react";
 import { AnimatePresence } from "framer-motion";
 import Menu from "./pages/Menu";
 import Preferences from "./pages/Prefs";
@@ -21,12 +21,12 @@ import { ServerSync } from "./engine/ServerSync";
 function AppRoutes() {
   const location = useLocation();
   const prevLocation = useRef(location);
-  
+
   useEffect(() => {
     // Runs when location changes
     if (prevLocation.current.pathname !== location.pathname) {
-      console.log('Route changed to '+location.pathname);
-      if(ServerSync.Instance.IsConnected && location.pathname !=="/play"){
+      console.log('Route changed to ' + location.pathname);
+      if (ServerSync.Instance.IsConnected && location.pathname !== "/play") {
         ServerSync.Instance.Quit("Client navigated out of session"); //Going away
       }
       prevLocation.current = location;
@@ -52,17 +52,17 @@ function AppRoutes() {
             path="/play"
             element={
               <AnimatedRouteWrapper>
-          {location.state === null&&location.pathname==="/play" ? (
-            // Redirect to home if gameConfig is undefined
-            (() => {
-              console.log("nav back!!!!");
-              
-                window.location.href = "/";
-              return null;
-            })()
-          ) : (
-            <Game gameConfig={location.state} />
-          )}
+                {location.state === null && location.pathname === "/play" ? (
+                  // Redirect to home if gameConfig is undefined
+                  (() => {
+                    console.log("nav back!!!!");
+
+                    window.location.href = "/";
+                    return null;
+                  })()
+                ) : (
+                  <Game gameConfig={location.state} />
+                )}
               </AnimatedRouteWrapper>
             }
           />
@@ -75,13 +75,11 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <ChakraProvider theme={theme}>
-      <GlobalConfigProvider>
-        <Router>
-          <AppRoutes />
-        </Router>
-      </GlobalConfigProvider>
-    </ChakraProvider>
+    <GlobalConfigProvider>
+      <Router>
+        <AppRoutes />
+      </Router>
+    </GlobalConfigProvider>
   );
 }
 
@@ -91,6 +89,9 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <React.StrictMode>
-    <App />
+    <ChakraProvider theme={theme}>
+      <ColorModeScript initialColorMode={theme.config.initialColorMode} />
+      <App />
+    </ChakraProvider>
   </React.StrictMode>
 );

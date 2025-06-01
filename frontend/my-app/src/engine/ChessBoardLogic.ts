@@ -61,9 +61,9 @@ export class Position {
         }
     }
 
-    public ToServerPos(promotionSuffix? : string): ServerPos {
+    public ToServerPos(promotionSuffix?: string): ServerPos {
         return {
-            file: String.fromCharCode(this.file + "a".charCodeAt(0))+(promotionSuffix||""),
+            file: String.fromCharCode(this.file + "a".charCodeAt(0)) + (promotionSuffix || ""),
             rank: 8 - this.rank
         }
     }
@@ -199,15 +199,15 @@ export class ChessBoard {
 
     }
 
-    public MovePiece(piece: Piece, to: { file: number; rank: number },suffix : string = "") {
+    public MovePiece(piece: Piece, to: { file: number; rank: number }, suffix: string = "") {
         if (piece) {
             if (!this.IsMoveLegal(piece, to)) return;
-            
+
             if (!this.isEditMode)
                 ServerSync.Instance.SendMove({
                     from: Position.Position(piece), to: Position.Position(to.file, to.rank)
                 }, suffix);
-            if(this.currentSync)
+            if (this.currentSync)
                 this.currentSync.legalMoves = [];
 
             if (this.board[to.rank][to.file].dummy) {
@@ -227,7 +227,7 @@ export class ChessBoard {
         if (this.isEditMode) return true;
         let moveStr = Position.Position(piece).ToServerPosString() + Position.Position(to.file, to.rank).ToServerPosString();
         if (!this.currentSync?.legalMoves) return false;
-        return this.currentSync.legalMoves.some(s=>s.slice(0,4)===moveStr);
+        return this.currentSync.legalMoves.some(s => s.slice(0, 4) === moveStr);
     }
 
     public GetLegalMoves(piece: Piece): Position[] {
@@ -324,14 +324,79 @@ function EditModeSetup(board: Square[][]) {
     ]);
 }
 
-export function IsFenValid(fen: string): boolean {
+export function ValidateFEN(fen: string, strict : boolean = true): string | null {
     const regex = /^((?:[rnbqkpRNBQKP1-8]{1,8}\/){7}[rnbqkpRNBQKP1-8]{1,8}) (w|b) (K?Q?k?q?|-) ((?:[a-h][36])|-) (\d+) ([1-9]\d*)$/;
-    return regex.test(fen) || regex.test(fen+" w - - 0 1");
+    if (!regex.test(fen) || regex.test(fen + " w - - 0 1")) return "FEN is not in a valid format";
+    if(!strict) return null;
+
+    const fenParts = fen.trim().split(" ");
+    const boardPart = fenParts[0];
+    const castlingPart = fenParts[2] || "-";
+
+    // Count kings and rooks
+    let whiteKing = 0, blackKing = 0;
+    let whiteRooks: { a: boolean, h: boolean } = { a: false, h: false };
+    let blackRooks: { a: boolean, h: boolean } = { a: false, h: false };
+
+    const rows = boardPart.split("/");
+    if (rows.length !== 8) {
+        return "FEN board does not have 8 ranks";
+    }
+    for (let rank = 0; rank < 8; rank++) {
+        let file = 0;
+        for (const char of rows[rank]) {
+            if (/\d/.test(char)) {
+                file += parseInt(char, 10);
+            } else {
+                if (char === "K") {
+                    whiteKing++;
+                    // White king starts at e1 (file 4, rank 7)
+                }
+                if (char === "k") {
+                    blackKing++;
+                    // Black king starts at e8 (file 4, rank 0)
+                }
+                // Check for rooks on a/h files for castling
+                if (char === "R" && rank === 7 && file === 0) whiteRooks.a = true;
+                if (char === "R" && rank === 7 && file === 7) whiteRooks.h = true;
+                if (char === "r" && rank === 0 && file === 0) blackRooks.a = true;
+                if (char === "r" && rank === 0 && file === 7) blackRooks.h = true;
+                file++;
+            }
+        }
+        if (file !== 8) {
+            return `Rank ${8 - rank} does not have 8 files`;
+        }
+    }
+    if (whiteKing !== 1 || blackKing !== 1) {
+        return "There must be exactly one white king and one black king";
+    }
+
+    // Validate castling rights
+    if (castlingPart !== "-") {
+        for (const c of castlingPart) {
+            if (c === "K" && (!whiteRooks.h)) {
+                return "White kingside castling right given but no rook on h1";
+            }
+            if (c === "Q" && (!whiteRooks.a)) {
+                return "White queenside castling right given but no rook on a1";
+            }
+            if (c === "k" && (!blackRooks.h)) {
+                return "Black kingside castling right given but no rook on h8";
+            }
+            if (c === "q" && (!blackRooks.a)) {
+                return "Black queenside castling right given but no rook on a8";
+            }
+        }
+    }
+
+    return null;
+
 }
 
-//an after-thought. As Stockfish does not support SAN. In theory local game should not require the server. It is not implemented regardless so who gives ¯\_(ツ)_/¯
+//an after-thought. As Stockfish does not support SAN, so I had to use a client-side library, so in theory, local game should not require the server. It is not implemented regardless so who gives ¯\_(ツ)_/¯
 export function GetMoveSAN(prevFen: string, newFen: string): string | null {
-    if(prevFen === newFen) return null;
+    if (prevFen === newFen) return null;
     const game = new Chess(prevFen);
 
     const possibleMoves = game.moves({ verbose: true });
@@ -347,3 +412,4 @@ export function GetMoveSAN(prevFen: string, newFen: string): string | null {
 
     return null; // No matching move found
 }
+

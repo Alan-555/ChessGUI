@@ -1,23 +1,11 @@
 // theme.ts
-import { extendTheme } from '@chakra-ui/react';
+import { extendTheme, ThemeConfig } from '@chakra-ui/react';
 
-const theme = extendTheme({
-  components: {
-    Menu: {
-      baseStyle: {
-        item: {
-          bg: 'white',        // default background
-          color: 'black',     // default text color
-          _hover: {
-            bg: 'gray.100',   // hover background
-          },
-          _focus: {
-            bg: 'gray.200',   // focused background
-          },
-        },
-      },
-    },
-  },
-});
+const config: ThemeConfig = {
+  initialColorMode: "dark", // or "light"
+  useSystemColorMode: false,
+};
+
+const theme = extendTheme({ config });
 
 export default theme;

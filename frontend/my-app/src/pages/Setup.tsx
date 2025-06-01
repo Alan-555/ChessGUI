@@ -15,10 +15,11 @@ import { ImageSplit } from '../components/ImageSplit';
 import { GameConfig, GameMode } from '../providers/GameConfigProvider';
 import { GlobalBoard } from '../pages/Game';
 import { Overlay } from '../components/Overlay';
-import { IsFenValid, PieceColor } from '../engine/ChessBoardLogic';
+import { ValidateFEN, PieceColor } from '../engine/ChessBoardLogic';
 import GameRaw from './GameRaw';
 import LoadingScreen from '../components/ConnectToServer';
 import { ServerSync } from '../engine/ServerSync';
+import { number } from 'framer-motion';
 
 
 
@@ -54,11 +55,12 @@ function ChessSetup({ mode }: { mode: GameMode }) {
             setActualSide(Math.random() < 0.5 ? 'white' : 'black');
         }
     }
-    const validateFen = () => {
-        if (!IsFenValid(fen)) {
+    const validateFen = (strict : boolean = true) => {
+        let fen_ = ValidateFEN(fen,strict);
+        if (fen_) {
             toast({
                 title: "Invalid FEN",
-                description: "The FEN string you entered is not valid.",
+                description: fen_,
                 status: "error",
                 duration: 4000,
                 isClosable: true,
@@ -163,7 +165,7 @@ function ChessSetup({ mode }: { mode: GameMode }) {
                                     placeholder="Minutes"
                                     value={yourTime}
                                     type='number'
-                                    onChange={(e) =>{ setYourTime(e.target.value)}}
+                                    onChange={(e) =>{ setYourTime(Math.floor(number.parse(e.target.value)).toString())}}
                                     onBlur={e=>{if(e.currentTarget.value===""&&useTimer)setUseTimer(false)}}
                                 />
                             </Box>
@@ -177,7 +179,7 @@ function ChessSetup({ mode }: { mode: GameMode }) {
                         <Input marginRight={"10px"} width={"80%"} size="lg" value={fen} onChange={(e) => setFen(e.target.value)} />
                         <Button
                             onClick={() => {
-                                if (!validateFen()) return;
+                                if (!validateFen(false)) return;
                                 setIsOpen(true);
                                 GlobalBoard.InitBoard(config.startPosition, true);
                             }}
