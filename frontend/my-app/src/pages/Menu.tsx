@@ -106,8 +106,8 @@ export default function Menu() {
       </Grid>
       <Button
         position="absolute"
-        bottom="5vh"
-        right="5vw"
+        bottom="1vh"
+        right="1vw"
         fontSize="lg"
         padding="1rem 2rem"
         borderRadius="md"
