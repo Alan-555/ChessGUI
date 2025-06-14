@@ -253,8 +253,9 @@ export default function ChessBoardComponent() {
                     })
                 )}
             </Grid>
-            {gameConfig?.GameMode === "BOARD_SETUP" && (
-                SetupPieceSpawner({ board: board.current, setDragContext: setDragContext })
+            {gameConfig?.GameMode === "BOARD_SETUP" && (<>
+                {SetupPieceSpawner({ board: board.current, setDragContext: setDragContext })}
+                </>
             )}
         </>
     );

@@ -19,6 +19,7 @@ function SetupPieceSpawner({ board, setDragContext }: { board: ChessBoard, setDr
                 flexDirection="row"
                 gap="20px"
             >
+                
                 <Box
                     bg={selectedColor === "black" ? "gray.700" : "gray.300"}
                     color="white"
@@ -41,6 +42,7 @@ function SetupPieceSpawner({ board, setDragContext }: { board: ChessBoard, setDr
                 >
                     White
                 </Box>
+                
                 {[
                     { type: 0, img: selectedColor === "black" ? img_b_pawn : img_w_pawn },
                     { type: 1, img: selectedColor === "black" ? img_b_knight : img_w_knight },
@@ -76,6 +78,7 @@ function SetupPieceSpawner({ board, setDragContext }: { board: ChessBoard, setDr
                         />
                     </Box>
                 ))}
+                <p style={{width:"100%", textAlign:"center", position:"absolute", top:"70px"}}>Right click to remove a piece</p>
             </Box>
         </>
     )
