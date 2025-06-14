@@ -1,4 +1,4 @@
-import ChessBoardComponent from "../components/ChessBoard";
+import ChessBoardComponent from "./ChessBoard";
 import { GameConfig, GameConfigProvider } from "../providers/GameConfigProvider";
 
 export default function GameRaw({gameConfig}:{gameConfig: GameConfig}) {

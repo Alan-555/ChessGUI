@@ -16,7 +16,7 @@ import { GameConfig, GameMode } from '../providers/GameConfigProvider';
 import { GlobalBoard } from '../pages/Game';
 import { Overlay } from '../components/Overlay';
 import { ValidateFEN, PieceColor } from '../engine/ChessBoardLogic';
-import GameRaw from './GameRaw';
+import GameRaw from '../components/GameRaw';
 import LoadingScreen from '../components/ConnectToServer';
 import { ServerSync } from '../engine/ServerSync';
 import { number } from 'framer-motion';
