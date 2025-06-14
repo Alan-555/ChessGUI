@@ -166,7 +166,7 @@ function ChessSetup({ mode }: { mode: GameMode }) {
                                     value={yourTime}
                                     type='number'
                                     onChange={(e) =>{ setYourTime(Math.floor(number.parse(e.target.value)).toString())}}
-                                    onBlur={e=>{if(e.currentTarget.value===""&&useTimer)setUseTimer(false)}}
+                                    onBlur={e=>{if((e.currentTarget.value===""|| e.currentTarget.value==="0") &&useTimer)setUseTimer(false)}}
                                 />
                             </Box>
                         </HStack>

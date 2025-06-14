@@ -32,6 +32,8 @@ export type Square = {
     selected?: boolean; //Selected by click
     dummy?: boolean; //Used for editing
     inCheck?: boolean; //Used for king exclusively and if the king is in check
+    moveFrom?: boolean; //last move from
+    moveTo?: boolean; //last move to
 }
 
 export class Position {
@@ -71,6 +73,10 @@ export class Position {
         return (String.fromCharCode(this.file + "a".charCodeAt(0)) + (8 - this.rank));
     }
 
+    public static FromServerPos(pos: ServerPos): Position {
+        return new Position(pos.file.charCodeAt(0) - "a".charCodeAt(0), 8 - pos.rank);
+    }
+
 
 
 }
@@ -99,31 +105,48 @@ export class ChessBoard {
 
     public SetNewSync(sync: MessageStateSync) {
         this.currentSync = sync;
-        if (sync.isInCheck) {
-            // Find the king of the color in check and set inCheck=true
-            for (let rank = 0; rank < 8; rank++) {
-                for (let file = 0; file < 8; file++) {
-                    const square = this.board[rank][file];
-                    const piece = square.piece;
-                    if (
-                        piece &&
-                        piece.type === PieceType.KING &&
-                        piece.color === sync.playerToMove
-                    ) {
-                        square.inCheck = true;
-                    } else if (square.inCheck) {
-                        square.inCheck = false;
+
+        for (let rank = 0; rank < 8; rank++) {
+            for (let file = 0; file < 8; file++) {
+                const square = this.board[rank][file];
+                const piece = square.piece;
+                const lastMove = sync.moves[sync.moves.length - 1];
+                if (lastMove) {
+                    const serverFrom: ServerPos = {
+                        file: lastMove.slice(0, 1),
+                        rank: parseInt(lastMove.slice(1, 2), 10)
+                    };
+                    const serverTo: ServerPos = {
+                        file: lastMove.slice(2, 3),
+                        rank: parseInt(lastMove.slice(3, 4), 10)
+                    };
+                    const squareFrom = Position.FromServerPos(serverFrom);
+                    const squareTo = Position.FromServerPos(serverTo);
+
+                    //Last move
+                    if (squareFrom.file === file &&
+                        squareFrom.rank === rank) {
+                        square.moveFrom = true;
+                    } else {
+                        square.moveFrom = false;
+                    }
+                    if (squareTo.file === file &&
+                        squareTo.rank === rank) {
+                        square.moveTo = true;
+                    } else {
+                        square.moveTo = false;
                     }
                 }
-            }
-        } else {
-            // Clear all inCheck flags
-            for (let rank = 0; rank < 8; rank++) {
-                for (let file = 0; file < 8; file++) {
-                    const square = this.board[rank][file];
-                    if (square.inCheck) {
-                        square.inCheck = false;
-                    }
+                //Is in check?
+                if (
+                    sync.isInCheck &&
+                    piece &&
+                    piece.type === PieceType.KING &&
+                    piece.color === sync.playerToMove
+                ) {
+                    square.inCheck = true;
+                } else if (square.inCheck) {
+                    square.inCheck = false;
                 }
             }
         }
@@ -324,10 +347,10 @@ function EditModeSetup(board: Square[][]) {
     ]);
 }
 
-export function ValidateFEN(fen: string, strict : boolean = true): string | null {
+export function ValidateFEN(fen: string, strict: boolean = true): string | null {
     const regex = /^((?:[rnbqkpRNBQKP1-8]{1,8}\/){7}[rnbqkpRNBQKP1-8]{1,8}) (w|b) (K?Q?k?q?|-) ((?:[a-h][36])|-) (\d+) ([1-9]\d*)$/;
     if (!regex.test(fen) || regex.test(fen + " w - - 0 1")) return "FEN is not in a valid format";
-    if(!strict) return null;
+    if (!strict) return null;
 
     const fenParts = fen.trim().split(" ");
     const boardPart = fenParts[0];

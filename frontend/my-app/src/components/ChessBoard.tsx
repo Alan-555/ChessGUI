@@ -149,6 +149,7 @@ export default function ChessBoardComponent() {
                             rowIndex = 7 - rowIndex;
                         }
                         const isDark = (rowIndex + colIndex) % 2 === 1;
+                        const contrastColor = isDark ? "white" : "black";
                         let style = isDark ? currentTheme.darkSquareStyles : currentTheme.lightSquareStyles;
                         let highlightStyle: CSSProperties | undefined = undefined;
                         const isSelected = selectContext.isSelected && selectContext.square === square;
@@ -157,6 +158,12 @@ export default function ChessBoardComponent() {
                             highlightStyle = { background: "gray", opacity: "0.3", transform: "scale(1)", borderRadius: "50%" };
                         if (square.inCheck && square.piece) {
                             highlightStyle = { background: "radial-gradient(circle,rgba(255, 0, 0, 1) 0%, rgba(248, 32, 32, 0) 70%, rgba(0, 0, 0, 0) 100%)", opacity: "1", transform: "scale(1.1)", borderRadius: "100%", zIndex: "1" };
+                        }
+                        if(square.moveFrom){
+                            highlightStyle = {border: "6px solid "+contrastColor,  transform: "scale(0.5)", zIndex: "1"};
+                        }
+                        if(square.moveTo){
+                            highlightStyle = {border: "6px solid "+contrastColor, transform: "scale(0.9)", zIndex: "1"};
                         }
                         if (selectContext.square?.piece)
                             if (board.current.GetLegalMoves(selectContext.square?.piece).some(x => x.file === colIndex && x.rank === rowIndex)) {

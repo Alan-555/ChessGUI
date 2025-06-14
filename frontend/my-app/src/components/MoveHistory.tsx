@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Turn } from '../pages/Game';
 
 interface MoveHistoryProps {
@@ -14,6 +14,14 @@ const MoveHistory: React.FC<MoveHistoryProps> = ({
     onPrevious,
     onNext,
 }) => {
+    const moveEndRef = useRef<HTMLDivElement | null>(null);
+    const scrollToBottom = () => {
+        moveEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [moves]);
     return (
         <div
             style={{
@@ -59,6 +67,7 @@ const MoveHistory: React.FC<MoveHistoryProps> = ({
                     </div>
                 </div>
             ))}
+            <div ref={moveEndRef} />
         </div>
     );
 };

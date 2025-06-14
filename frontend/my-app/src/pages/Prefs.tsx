@@ -87,10 +87,14 @@ export default function Preferences() {
               <input
                 type="number"
                 value={customScaling}
-                onChange={(e) => setCustomScaling(Number(e.target.value))}
-                min={50}
-                max={200}
-                step={10}
+                onChange={(e) => {
+                  setCustomScaling(Number(e.target.value))
+                }}
+                onBlur={e=>{
+                  if (Number(e.target.value) < 10 || Number(e.target.value) > 200) {
+                    setCustomScaling(50);
+                  }
+                }}
                 style={{
                   width: "60px",
                   textAlign: "center",
