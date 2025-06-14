@@ -132,6 +132,7 @@ export type MessageStateSync = {
     sfDifficulty?: number; //AI difficulty, if applicable
     isInCheck?: boolean; //if the player to move is in check
     moves : string[] //UNUSED
+    clockPaused?: boolean; //if the clock is paused
 }
 
 type QueueRecord = {

@@ -22,9 +22,9 @@ class Connection {
         this.tableSession_ = val;
     }
 
-    public SetTableSession(val: TableSession, register : boolean = false) {
+    public SetTableSession(val: TableSession, register: boolean = false) {
         this.tableSession_ = val;
-        if (val.gameID&&register)
+        if (val.gameID && register)
             Connection.waitingTables[val.gameID] = val;
 
     }
@@ -179,7 +179,7 @@ class WebSocketSingleton {
             ts.state.playerToMove = data.data.boardFen.split(' ')[1].toLowerCase() == 'w' ? "white" : "black";
             await ts.sfInterface.Init();
             await ts.sfInterface.setPosition(data.data.boardFen);
-            conn.SetTableSession(ts,true);
+            conn.SetTableSession(ts, true);
             conn.isHost = true;
             if (!isAi)
                 Reply({
@@ -269,7 +269,7 @@ class WebSocketSingleton {
         else if (data.type == MessageType.MOVE) {
             //TODO: validate move
             if (conn.GetPlayer()?.color != tableSession.state.playerToMove) return;
-            const move = GetServerMove(data.data)+(data.data.suffix||"");
+            const move = GetServerMove(data.data) + (data.data.suffix || "");
             if (!tableSession.state.legalMoves?.includes(move)) {
                 Reply({
                     type: MessageType.CLIENT_ERROR,
@@ -357,7 +357,8 @@ class WebSocketSingleton {
             isInCheck: await tableSession.sfInterface.isInCheck(),
             whiteTime: tableSession.state.whiteTime,
             blackTime: tableSession.state.blackTime,
-            moves: tableSession.moves
+            moves: tableSession.moves,
+            clockPaused: tableSession.moves.length == 0
         }
         this.SendMessageTo(socket, {
             type: MessageType.SYNC,
@@ -366,6 +367,7 @@ class WebSocketSingleton {
     }
 
     public async HandleClock(tableSession: TableSession, conn: Connection, initial: boolean = false) {
+        //initial = tableSession.moves.length == 0;
         if (!tableSession.state.useTime) return;
         let playerToMove = tableSession.state.playerToMove;
         if (initial) playerToMove = OtherColor(playerToMove);
@@ -374,17 +376,19 @@ class WebSocketSingleton {
             clearTimeout(tableSession.timeOutInterval);
         }
         if (playerToMove == "white") {
-            if (!initial)
-                tableSession.state.whiteTime -= now - tableSession.state.whiteStartTimestamp!;
             tableSession.state.blackStartTimestamp = now;
+            if (initial || tableSession.moves.length == 0)
+                return;
+            tableSession.state.whiteTime -= now - tableSession.state.whiteStartTimestamp!;
             tableSession.timeOutInterval = setTimeout(() => {
                 this.ConcludeGame("TIME_OUT", "Time out for black player", 'white', tableSession, conn);
             }, tableSession.state.blackTime);
         }
         else {
-            if (!initial)
-                tableSession.state.blackTime -= now - tableSession.state.blackStartTimestamp!;
             tableSession.state.whiteStartTimestamp = now;
+            if (initial || tableSession.moves.length == 0)
+                return;
+            tableSession.state.blackTime -= now - tableSession.state.blackStartTimestamp!;
             tableSession.timeOutInterval = setTimeout(() => {
                 this.ConcludeGame("TIME_OUT", "Time out for white player", 'black', tableSession, conn);
             }, tableSession.state.whiteTime);

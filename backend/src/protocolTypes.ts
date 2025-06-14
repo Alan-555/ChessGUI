@@ -138,6 +138,7 @@ export type MessageStateSync = {
     sfDifficulty?: number; //AI difficulty, if applicable
     isInCheck?: boolean; //if the player to move is in check
     moves : string[]
+    clockPaused?: boolean; //if the clock is paused
 
     //server-side only
     useTime?: boolean,

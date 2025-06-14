@@ -4,7 +4,7 @@ import { useGlobalConfig } from '../providers/GlobalConfigProvider';
 import { useGameConfig } from '../providers/GameConfigProvider';
 import { ServerSync } from '../engine/ServerSync';
 
-const Timer = ({ timeWhite, timeBlack, activeTimer }: { timeWhite: number, timeBlack: number, activeTimer: PieceColor | undefined }) => {
+const Timer = ({ timeWhite, timeBlack, activeTimer, clockPaused }: { timeWhite: number, timeBlack: number, activeTimer: PieceColor | undefined, clockPaused: boolean | undefined }) => {
     const config = useGlobalConfig();
     const gameSettings = useGameConfig();
     const bottomColor: PieceColor = config.config.render.preferredPlayerSide === "BottomMe" ? gameSettings!.onlineThisPlayer : "white";
@@ -24,11 +24,18 @@ const Timer = ({ timeWhite, timeBlack, activeTimer }: { timeWhite: number, timeB
 
 
     useEffect(() => {
-        if(bottomSyncTime===0&&topSyncTime===0){
+        if (bottomSyncTime === 0 && topSyncTime === 0) {
 
             return;
         }
         const interval = setInterval(() => {
+
+            if (clockPaused !== false) {
+                setTopTime(topSyncTime);
+                setBottomTime(bottomSyncTime);
+                setSyncStartTimeStamp(Date.now());
+                return;
+            }
             if (activeTimer === bottomColor && ServerSync.Instance.IsConnected)
                 setBottomTime(() => {
                     const elapsed = Date.now() - syncStartTimeStamp;
@@ -45,16 +52,16 @@ const Timer = ({ timeWhite, timeBlack, activeTimer }: { timeWhite: number, timeB
     }, [activeTimer, bottomColor, bottomTime, bottomSyncTime, topTime, topSyncTime, syncStartTimeStamp]);
 
     const formatTime = (time_: number) => {
-        if(topSyncTime===0&&bottomSyncTime===0){
+        if (topSyncTime === 0 && bottomSyncTime === 0) {
             return "--:--";
         }
-        time_ = Math.max(0,time_);
+        time_ = Math.max(0, time_);
         let time = time_ / 1000; // Convert milliseconds to seconds
         time = Math.floor(time);
         const minutes = Math.floor(time / 60);
         const seconds = time % 60;
         const millis = (time_) % 1000;
-        const millisShow = time < 60 ? `.${millis.toString().padStart(3,'0').slice(0,2)}` : "";
+        const millisShow = time < 60 ? `.${millis.toString().padStart(3, '0').slice(0, 2)}` : "";
         return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}${millisShow}`;
     };
 

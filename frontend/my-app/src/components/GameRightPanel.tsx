@@ -31,7 +31,7 @@ const GameRightPanel = ({chat,sendChat,timer, moves}:{chat:ChatMessage[],moves :
             <Box maxHeight={"15vh"} flex="1" bg="gray.100" borderRadius="md" p={4} boxShadow="sm">
                 {
                     timer!=null && (
-                        <Timer activeTimer={GlobalBoard.currentSync?.playerToMove} timeBlack={timer.blackTime} timeWhite={timer.whiteTime} />
+                        <Timer activeTimer={GlobalBoard.currentSync?.playerToMove} clockPaused={GlobalBoard.currentSync?.clockPaused} timeBlack={timer.blackTime} timeWhite={timer.whiteTime} />
                     )
                 }
             </Box>

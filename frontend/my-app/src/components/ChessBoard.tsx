@@ -168,9 +168,9 @@ export default function ChessBoardComponent() {
                         if (selectContext.square?.piece)
                             if (board.current.GetLegalMoves(selectContext.square?.piece).some(x => x.file === colIndex && x.rank === rowIndex)) {
                                 if (pieceImg)
-                                    highlightStyle = { background: "radial-gradient(circle,rgb(0, 251, 239) 0%, rgba(248, 32, 32, 0) 90%, rgba(0, 0, 0, 0) 100%)", opacity: "0.5", transform: "scale(1)", borderRadius: "100%" };
+                                    highlightStyle = { background: contrastColor, opacity: "0.7", filter:"blur(10px)" ,transform: "scale(0.9)", borderRadius: "100%" };
                                 else
-                                    highlightStyle = { background: "radial-gradient(circle,rgb(0, 251, 255) 0%, rgba(248, 32, 32, 0) 90%, rgba(0, 0, 0, 0) 100%)", opacity: "0.5", transform: "scale(0.3)", borderRadius: "100%" };
+                                    highlightStyle = { background: contrastColor, opacity: "0.5", transform: "scale(0.3)", borderRadius: "100%" };
 
                             }
 

@@ -125,7 +125,7 @@ type GlobalConfig = {
     render: {
         imgSize: number | undefined;
         preferredPlayerSide?: "BottomMe" | "BottomWhite";
-        theme : string
+        theme : string,
     },
     audio:{
         doPlay: boolean
